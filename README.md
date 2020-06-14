@@ -1,13 +1,6 @@
-# THIS REPOSITORY HAS MOVED. #
-
-Please visit: 
-https://github.com/sreekotay/coral-ui
-
-# THIS REPOSITORY HAS MOVED. #
-
-# coral.ui (formerly REEFER)
+# coral.ui
 A lightweight fully reactive, low boilerplate UI library.
-Inspired by Vue, Svelte, and (of course) Reef.
+Inspired by Vue, Svelte, and Reef.
 
 coral.ui can be used both programatically and declaratively.
 
