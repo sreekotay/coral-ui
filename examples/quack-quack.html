@@ -8,12 +8,13 @@
       .block            {padding: 0 8px; padding-bottom:8px; border-left:1px dotted #ddd; }
       .block:before     {content: ''; width:0;}
       .cui-card img     {max-height:128px; max-width:50%; margin-right:8px;}
-      .cui-card         {min-width: 128px }
+      .cui-card         {min-width: 128px; padding:2px; }
       .list             {font-style:normal; margin-bottom:8px; color:#E37151; font-size:16px;}
       a                 {text-decoration-color:#E37151;}
       a:link            {font-weight: 500; font-style:normal; color:#E37151; }
       article           {font-size:13px; font-weight:400; font-style:italic; min-width:72px;}
       input             {margin:8px; min-width:280px; border: 1px solid #E37151; padding: 8px;}
+      .cui-vertical.cui-space-children > * { margin-bottom: 2px;}
   </style>
   <body style='center;overflow-y:scroll;'>
     <nav class="menu" style='background-color:#E37151;'>
@@ -26,15 +27,16 @@
     <div class='cui-vertical' style='margin:auto; max-width:calc(100vw - 16px); width:640px; overflow: auto;'>
         <h2 id='duckduckgo' class='cui-wide cui-center cui-space-children' style='font-variant:small-caps; margin-top:px;'>
           <div class='cui-horizontal cui-center'>
-            <a href='http://duckduckgo.com'><img for='duckduckgo' width=64 src='img/duckduckgo.png'></a>
+            <a href='http://duckduckgo.com'><img for='duckduckgo' width=48 style='padding-top:4px' src='img/duckduckgo.png'></a>
             <a href='http://duckduckgo.com' style='font-variant:small-caps;''>DuckDuckGo</a>
           </div>
           <div coral id='coralinput' style='position:relative' coral-s-datasrc='state' coral-s-inputtext  coral-on-input>
             <script type='coral-template(d)' coral-children=2>
               <div style='position:relative'> 
-                <input  id='searchinput' placeholder='Type here - powered by Instant Answers' 
+                <input coral id='searchinput' placeholder='Type here - powered by Instant Answers' 
                     coral-on-input=methods.submitInput 
-                    _oninput="updateSearch(this.value)" coral coral-s-value='~rootEl.value'>
+                    coral-s-value='~rootEl.value'
+                    _oninput="updateSearch(this.value)" >
                 <span style='position:absolute; right:8px; top:8px; opacity: 0.0'>✖️</span>
               </div>
             </script>
@@ -70,7 +72,7 @@
     function updateSearch(value) {
       value = value ||'rock' // some default just because
       var ui = coral.ui.find('#searchlist')
-      if (ui && value && value.length>2)
+      if (ui && value && value.length>1)
         ui.bind ('state.answer', '$jsonp$https://api.duckduckgo.com/?q=' + encodeURIComponent(value) + 
                                   '&format=json&callback={JSONP}')
       }

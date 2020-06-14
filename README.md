@@ -7,7 +7,7 @@ coral.ui can be used both programatically and declaratively.
 # Getting Started
 
 No build is required. 
-Check out some examples: <https://sreekotay.github.io/coral.ui/examples/>.
+Check out some examples: <https://sreekotay.github.io/coral-ui/examples/>.
 
 Simply include:
 ```
@@ -32,13 +32,13 @@ You can conditionally include with this line:
 # Hello World #
 ```
 <html>
-<script src=coral.ui-min.js></script>
+<script src=coral-ui-min.js></script>
 <body>
 	example: <div coral=hello></div>		
 </body>
 <script>
 	coral.ui.register ('hello', {
-		template: function() {
+		update: function() {
 			this.html (0, 'Hello World!')
 		}
 	})
@@ -48,22 +48,22 @@ You can conditionally include with this line:
 and a slightly more complicated example
 ```
 <html>
-  <script src=xs_observe.js></script>
-  <script src=coral.ui.js></script>
+  <script src=coral-observe.js></script>
+  <script src=coral-ui.js></script>
 <body>
   example: <div coral=hello coral-p-name='Alice'></div>		
 <script>
 	var helloTempl = coral.ui.template ('name', 'Hello World ${name||""}!')
 	coral.ui.register ('hello', {
-		data: {
+		state: {
 			name: 'Sree'
 		},
-		template: function() {
-			this.html (0, helloTempl(this.data.name))
+		update: function() {
+			this.html (0, helloTempl(this.state.name))
 		}
 	})
 	setTimeout(function () {
-		coral.ui.find('[coral=hello]').data.name = 'Bob'
+		coral.ui.find('[coral=hello]').state.name = 'Bob'
 	}, 2000)
 </script>
 </body>
