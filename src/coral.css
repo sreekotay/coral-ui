@@ -180,11 +180,11 @@ tr {
   text-align:left; 
 }
 
-.cuitabs {
+.cui-tabs {
   display: flex;
   flex-direction: row;
 }
-.cuitabs > label {
+.cui-tabs > label {
   cursor: pointer;
   background-color: #2196F3;
   color: white;
@@ -198,14 +198,14 @@ tr {
   background-color: #2196F3;
   color: white;
 }
-.cuitabs > input {
+.cui-tabs > input {
   display:none;
 }
-.cuitabs.down > label {
+.cui-tabs.down > label {
   margin-right: 1px;
   border-radius: 14px 14px 0 0;
 }
-.cuitabs.up > label {
+.cui-tabs.up > label {
   border-radius: 0 0 14px 14px;
   margin-right: 1px;
 }
