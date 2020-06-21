@@ -1,8 +1,8 @@
 <html>
-  <script src='../dist/reefer-min.js'></script>
+  <script src='../dist/coral-ui-min.js'></script>
   <link rel="stylesheet" type="text/css" href="../src/coral.css">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Reefer Examples Index</title>
+  <title>Coral.ui Examples Index</title>
   <body>
     <style>
        .indent-list {
@@ -13,7 +13,7 @@
 <div style='display:flex; align-items: center; flex-direction:column;min-height:100vh; background-color:#fff;'>
   <div style='flex-grow:1;padding:0px 24px; background-color:#fff;'>
     <h1  style='margin:48px 0;'><a href="https://github.com/sreekotay/reefer"'>coral.ui</a> examples</h1>
-    <div reef class=indent-list reef-p-links='[
+    <div coral class=indent-list coral-s-links='[
       ["hello", "simple hello world", "/coral-hello.html"],
       ["todos", "required demo :P", "/coral-todo.html"],
       ["quack", "duckduckgo instant answers - reactive", "/quack-quack.html"],
@@ -22,9 +22,9 @@
       ["js-framework benchmark", "multi-framework benchmark", "/js-framework-benchmark/keyed/reefer/"],
       ["dbmon", "thrashing stress tester", "/dbmon/dbmon-reefer.html"],
       ["triangle", "sierpinkski traingle reactive benchmark", "/triangle.html"]
-      ]' reef-p-datasrc='data.links'
+      ]' coral-s-datasrc='state.links'
       >
-      <script type='reef-template(d,i)'>
+      <script type='coral-template(d,i)'>
           <div><b><a href='.${d[2]}'>${d[0]}</a></b> - ${d[1]}</div>
       </script>
     </div>
