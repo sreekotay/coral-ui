@@ -1033,6 +1033,11 @@ window.coral.ui = UIFactory({ autorun: true })
 // ============================================
 ;(function () {
   var coral = window.coral = window.coral || {}; coral.ui = coral.ui || {}
+  coral.ui.loadScript = function (url) {
+    if (document.querySelector('script[url="' + (url) + '"]')) return 
+    var s = document.createElement('script'); s.src = url; s.setAttribute('url', url)
+    document.getElementsByTagName('head')[0].appendChild(s)
+  }
   coral.ui.clientSideInclude = function (data) {
     function isfunction (obj) { return !!(obj && obj.constructor && obj.call && obj.apply) }
     if (isfunction(data)) data = data.toString().split('\n').slice(1, -1).join('\n')

@@ -15,6 +15,18 @@ coral.ui.register('*articlesList', {
     var url = baseurl + '/articles?'
     var tag = this.state.tag; if (tag) url += '&tag=' + tag
     this.bind('state.articlesdata', '$json$' + url)
+    var list = coral.ui.find ('.nav-pills')
+    if (list) {
+      if (!tag) {
+        //if (list.state.links.length==3) list.state.links.pop()
+        list.state.links[1].state = 'active'
+        if (list.state.links.length>2) list.state.links[2].state = ''
+      } else {
+        list.state.links[1].state = ''
+        list.state.links.length = 2
+        list.state.links.push ({label:'# ' + tag, state:'active', href:'#?tag='+tag})
+      }
+    }
   },
   observers: {
     'tagsdata': function (updates) {
@@ -38,13 +50,18 @@ coral.ui.clientSideInclude (function () {/*
 
       <div class="col-md-9">
         <div class="feed-toggle">
-          <ul class="nav nav-pills outline-active">
-            <li class="nav-item">
-              <a class="nav-link disabled" href="">Your Feed</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link active" href="">Global Feed</a>
-            </li>
+          <ul coral class="nav nav-pills outline-active" coral-s-datasrc='state.links'>
+            <script type='coral-template(d)'>
+              <li class="nav-item">
+                <a class="nav-link ${d.state}" href="${d.href}">${d.label}</a>
+              </li>
+            </script>
+            <script type='coral-s-links'>
+            [
+              {"label": "Your Feed", "state":"disabled", "href":"#/login-register"},
+              {"label": "Global Feed", "state":"active", "href":"#"}
+            ]
+            </script>
           </ul>
         </div>
         <div coral=articlesList >

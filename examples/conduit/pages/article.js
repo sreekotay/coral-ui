@@ -2,31 +2,32 @@
 // ============================
 // our article
 // ============================
-reefer.register('*article', {
-  data: {
-    datasrc: 'data.articledata.article',
+coral.ui.register('*article', {
+  state: {
+    datasrc: 'state.articledata.article',
     articledata: null,
     taglist: null
   },
   bind: {
-    resource: { selector: '[reef=switcher]' } //  same as: reef-p-tag="~~[reef=switcher]"
+    resource: { selector: '[coral=switcher]' } //  same as: coral-s-tag="~~[coral=switcher]"
   },
   observers: {
     articledata: function () {
-      if (this.data.articledata) this.data.taglist = this.data.articledata.article.tagList
+      if (this.state.articledata) this.state.taglist = this.state.articledata.article.tagList
     },
     resource: function () {
-      if (this.data.resource) {
-        var url = baseurl + '/articles/' + this.data.resource
-        this.bind('data.articledata', '$json$' + url)
+      if (this.state.resource) {
+        var url = baseurl + '/articles/' + this.state.resource
+        this.bind('state.articledata', '$json-raw$' + url)
       }
     }
   }
 })
 
+coral.ui.loadScript('https://cdn.jsdelivr.net/npm/marked/marked.min.js')
 coral.ui.clientSideInclude(function (d) { /*
-<div class="article-page" reef=article>
-  <script type=reef-template(d)>
+<div class="article-page" coral=article>
+  <script type=coral-template(d)>
   <div>
   <div class="banner" >
     <div class="container">
@@ -58,12 +59,13 @@ coral.ui.clientSideInclude(function (d) { /*
   <div class="container page">
 
     <div class="row article-content">
-      ${d.body}
+      <p>
+      ${marked(d.body)}
     </div>
 
     <hr />
-      <div reef class="tag-list" reef-p-datasrc="data.taglist" reef-p-taglist="~~[reef=article]" >
-        <script type='reef-template(d)'>
+      <div coral class="tag-list" coral-s-datasrc="data.taglist" coral-s-taglist="~~[coral=article]" >
+        <script type='coral-template(d)'>
           <a href='#?tag=\${d}'  class="tag-pill tag-default" >\${d}</a>
         <\/script>
       </div>
