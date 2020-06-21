@@ -50,7 +50,7 @@
              coral-s-datakey='FirstURL'
              class='cui-vertical cui-space-children'>
           <script type='coral-template(d, i, ctx)'>
-            <div class='cui-card cui-horizontal cui-anim cui-anim-add'style='overflow:auto; overflow-y:hidden'>
+            <div class='cui-card cui-horizontal cui-anim'style='overflow:auto; overflow-y:hidden'>
               <img style='max-width:20%' src=${(d.Icon && d.Icon.URL) || ''}>
               <article class='${d.Result && d.Icon && d.Icon.URL ? 'block' : ''}' >
                 <div class='${d.Result ? '' : 'list'}'>${(d.Result || d.Name || '').replace(/<br>/g, '')}</div>

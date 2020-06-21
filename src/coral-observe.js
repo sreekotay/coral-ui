@@ -2,7 +2,7 @@
   // ===================================
   // observer
   // ===================================
-  function deepObserver (obj, handler, ctxobj, path) {
+  function objectObserver (obj, handler, ctxobj, path) {
     if (obj instanceof Node) return
     if (!obj && this.__xs__) obj = this // called via obj.__observe__()
     if (!obj) return
@@ -29,23 +29,19 @@
       propertyObserver(obj, p, handler, path)
     }
 
-    if (Array.isArray(obj)) arrayObserverHelper(obj, handler)
-    if (!obj.__observe__ && path === undefined && ctxobj === undefined) privateprop(obj, '__observe__', deepObserver)
+    if (Array.isArray(obj)) arrayObserver(obj, handler)
+    if (!obj.__observe__ && path === undefined && ctxobj === undefined) privateprop(obj, '__observe__', objectObserver)
     return obj
   }
 
-  function arrayObserverHelper (arr, handler) {
+  function arrayObserver (arr, handler) {
     if (arr.__xs__.arrhelpers) return
     arr.__xs__.arrhelpers = true
     var mbind = function (method) {
       var mf = function () {
         var o = this; var _o = o.__xs__
         _o.pause = true; var n = Array.prototype[method].apply(o, arguments); _o.pause = false
-        tick(_o.s, o, function () {
-          // _o.pause = true
-          deepObserver(o)
-          // _o.pause = false
-        })
+        tick(_o.s, o, function () { objectObserver(o) })
         trigger(method, o, arguments, o, null)
         return n
       }
@@ -65,19 +61,17 @@
       var gf = function () { return v[p] }
       var sf = function (n) {
         var o = v[p]; v[p] = n
-        if (typeof (n) === 'object' && n !== null && !n.__xs__) {
-          // deepObserver(n, handler, { o: obj, p: p }, path)
-          tick(_obj.s, obj, function () { deepObserver(n, handler, { o: obj, p: p }, path) }, true)
-        }
+        if (typeof (n) === 'object' && n !== null && !n.__xs__)
+          tick(_obj.s, obj, function () { objectObserver(n, handler, { o: obj, p: p }, path) }, true)
         trigger('set', obj, p, n, o)
         return n
       }
       Object.defineProperty(obj, p, { get: gf, set: sf, enumerable: true, configurable: true })
     }
-    if (typeof (pv) === 'object') deepObserver(pv, handler, { o: obj, p: p }, path)
+    if (typeof (pv) === 'object') objectObserver(pv, handler, { o: obj, p: p }, path)
   }
 
-  function deepUnobserver (obj, handler) {
+  function objectUnobserver (obj, handler) {
     if (!obj.__xs__) return
     var h = obj.__xs__.h
     for (var i = h.length - 1; i >= 0; i--) {
@@ -86,7 +80,7 @@
         h.splice(i, 1)
       }
     }
-    for (var p in obj) if (typeof (p) === 'object' && p !== null) deepUnobserver(p[obj], handler)
+    for (var p in obj) if (typeof (p) === 'object' && p !== null) objectUnobserver(p[obj], handler)
   }
 
   // ===================================
@@ -112,9 +106,7 @@
     if (typeof (handler) === 'object') handler = values(handler).h
     else handler = [{ rootobj: obj, f: handler, path: path, s: '#' + __ghsymbol++ }]
 
-    var _obj = values(obj)
-    // var h = _obj.h = _obj.h || []
-    handlerMerge(_obj.h, handler, path)
+    handlerMerge(values(obj).h, handler, path)
     return obj
   }
 
@@ -143,11 +135,22 @@
 
   function trigger (action, obj, p, n, o) {
     var _obj = obj.__xs__
-    if (/* n === o || */!_obj || !_obj.h || _obj.pause) return // don't send event if value the same
+    if (!_obj || !_obj.h || _obj.pause) return
     var h = _obj.h
     for (var i = 0; i < h.length; i++) {
       var ha = h[i]
-      var upd = { rootobj: ha.rootobj, obj: obj, action: action, prop: p, value: n, prev: o, chain: ha.path, root: ha.root || p, path: ha.dotpath ? ha.dotpath + '.' + p : p, find: chainfind }
+      var upd = {
+        rootobj: ha.rootobj,
+        obj: obj,
+        action: action,
+        prop: p,
+        value: n,
+        prev: o,
+        chain: ha.path,
+        root: ha.root || p,
+        path: ha.dotpath ? ha.dotpath + '.' + p : p,
+        find: chainfind
+      }
       ha.f.call(obj, upd)
     }
   }
@@ -171,11 +174,11 @@
       }
     }
     if (refobj instanceof Node) {
-      //if (!(obsp in obsobj)) 
+      // if (!(obsp in obsobj))
       obsobj[obsp] = refobj[refp] // "realize" it
       if (!obsobj.__observer__) xs.observe(obsobj)
       var objpd = Object.getOwnPropertyDescriptor(obsobj, obsp)
-/*
+      /*
       switch (refp) {
         case 'value': {
           refobj.addEventListener ('input', function() {
@@ -219,12 +222,12 @@
     return { value: obj, obj: o, prop: k }
   }
 
-  function objmerge (a, b) {
+  function deepcopy (a, b) {
     if (b === undefined) return a
     if (typeof (b) !== 'object' || b === null) return b
-    var obtype = Object.prototype.toString.call(b)
-    if (obtype === '[object RegExp]' || obtype === '[object Date]' || b instanceof Node) return b
-    if (obtype === '[object Array]') {
+    var bt = Object.prototype.toString.call(b)
+    if (bt === '[object RegExp]' || bt === '[object Date]' || b instanceof Node) return b
+    if (bt === '[object Array]') {
       if (Object.prototype.toString.call(a) !== '[object Array]') a = [] // should we FORCE to array?
       var c = []
       for (var i in b) { if (!(i in a)) c[i] = b[i] }
@@ -232,11 +235,11 @@
       return a
     }
     if (typeof (a) !== 'object') a = {}
-    for (var k in b) a[k] = objmerge(a[k], b[k])
+    for (var k in b) a[k] = deepcopy(a[k], b[k])
     return a
   }
-  function objassign () { var a = arguments; var al = 0; var o = a[0]; while (++al < a.length) o = objmerge(o, a[al]); return o }
-  function objclone () { var a = arguments; var al = -1; var o = {}; while (++al < a.length) o = objmerge(o, a[al]); return o }
+  // function objclone () { var a = arguments; var al = -1; var o = {}; while (++al < a.length) o = objmerge(o, a[al]); return o }
+  function objassign () { var a = arguments; var al = 0; var o = a[0]; while (++al < a.length) o = deepcopy(o, a[al]); return o }
   function privateprop (o, k, v, writable) { Object.defineProperty(o, k, { value: v, enumerable: false, configurable: true, writable: !!writable }); return v }
 
   var __gobt; var __gob = { '@': {} }
@@ -246,6 +249,12 @@
     for (var k in g) { if (g[k]) g[k].f.call(g[k].o, g[k].o) }
     for (k in gob) { if (gob[k]) gob[k].f.call(gob[k].o, gob[k].o) }
   }
+  function tick (_s, o, f) {
+    var g = (_s[0] === '@') ? __gob['@'] : __gob
+    g[_s] = { f: f, o: o }
+    if (!__gobt) __gobt = setTimeout(resolveTick, 0)
+  }
+  /*
   function tick (_s, o, f, delay) {
     // delay = true
     // f.call(o, o); return true;
@@ -263,14 +272,14 @@
     __gobt = setTimeout(resolveTick, 0)
     return true
   }
+  */
 
   // export
   var xs = window.coral = window.coral || {}
-  xs.observe = deepObserver
-  xs.unobserve = deepUnobserver
+  xs.observe = objectObserver
+  xs.unobserve = objectUnobserver
   xs.alias = alias
   xs.assign = objassign
-  xs.clone = objclone
   xs.tick = tick
   xs.dot = dot
   xs.privateprop = privateprop

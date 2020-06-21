@@ -269,7 +269,7 @@ function UIFactory (opts) {
       var p = props[i]
       var np = (p in o2) ? o2[p] : o1[p]
       if (np === undefined) continue
-      o[p] = xs.clone(o1[p], o2[p])
+      o[p] = xs.assign({}, o1[p], o2[p])
     }
   }
 

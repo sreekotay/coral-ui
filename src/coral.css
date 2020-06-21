@@ -93,10 +93,13 @@ html {
 
 html, * {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Helvetica, sans-serif;
-  line-height: 1.5;
+  _line-height: 1.5;
   -webkit-text-size-adjust: 100%;
   margin: 0;
   -webkit-overflow-scrolling: touch;
+}
+textarea {
+  font-family: "Lucida Console", Monaco, monospace;
 }
 
 body {
@@ -136,12 +139,17 @@ input {
     flex-grow: 1;
     padding: 4px 8px;
     background-color: #fff;
-    border-radius: 4px;
-    box-shadow: inset 0 11px 8px -14px #ddd, inset 0 -11px 8px -12px #ddd;
+    border-radius: 8px;
+    box-shadow: inset 0 11px 8px -13px #ddd, inset 0 -11px 8px -11px #ddd;
+    position: relative;
 }
 
 .textshadow {
   text-shadow: 3px 0px 5px rgba(5, 44, 54,0.2),-3px 0px 5px rgba(5, 44, 54,0.2);  
+}
+
+input:before:focus {
+  content:'A'; 
 }
 
 input:focus {
@@ -149,7 +157,6 @@ input:focus {
 }
 
 input:active {
-  border-top:none;
 }
 
 img {
