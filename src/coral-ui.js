@@ -22,7 +22,7 @@ function UIFactory (opts) {
         var gen = (dl && slot) || (slots.empty && slots.empty.text) || { text: '<div> </div>' }
         var key = _s.datakey; var uk
         if (!Array.isArray(dl)) dl = [dl]
-        if (slots.header) this.html(-1, slots.header.script ? slots.header(dc) : slots.header.text)
+        if (slots.header) this.html(-1, slots.header.script ? slots.header.script(dc) : slots.header.text)
         var hm = this.__.hmap || {}
         dc.__hmap__ = hm
         for (var i = 0; i < dl.length; i++) {
@@ -371,7 +371,7 @@ function UIFactory (opts) {
     var xhr = opts.xhr || new XMLHttpRequest()
     /* if (!opts.xhr || opts.responseType) // either it's new or it's passed in
     { xhr.responseType = opts.responseType || 'json' } */
-    xhr.onerror = function (err) { console.log('CORAL HTTP LOAD', err); emit(rf.rootEl, 'coralLoadDataFail', { url: url }) }
+    xhr.onerror = function (err) { console.log('CORAL HTTP LOAD FAIL', err, url); emit(rf.rootEl, 'coralLoadDataFail', { url: url }) }
     xhr.onload = function (ev) {
       if (this.status === 200) {
         var res = this.response

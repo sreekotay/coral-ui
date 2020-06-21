@@ -9,18 +9,26 @@ coral.ui.register('*article', {
     taglist: null
   },
   bind: {
-    resource: { selector: '[coral=switcher]' } //  same as: coral-s-tag="~~[coral=switcher]"
+    resource: { selector: '[coral=switcher]' } //  same as: coral-s-resource="~~[coral=switcher]"
   },
   observers: {
     articledata: function () {
       if (this.state.articledata) this.state.taglist = this.state.articledata.article.tagList
     },
-    resource: function () {
-      if (this.state.resource) {
-        var url = baseurl + '/articles/' + this.state.resource
-        this.bind('state.articledata', '$json$' + url)
-      }
-    }
+    resource: function () {this.bind('state.articledata', '$json$' + baseurl + '/articles/' + this.state.resource)}
+  }
+})
+
+coral.ui.register('*article-comments', {
+  state: {
+    datasrc: 'state.commentsdata.comments',
+    commentsdata: null,
+  },
+  bind: {
+    resource: { selector: '[coral=switcher]' } //  same as: coral-s-tag="~~[coral=switcher]"
+  },
+  observers: {
+    resource: function () { this.bind('state.commentsdata', '$json$' + baseurl + '/articles/' + this.state.resource + '/comments')}
   }
 })
 
@@ -38,7 +46,7 @@ coral.ui.clientSideInclude(function (d) { /*
         <a href=""><img src="${d.author.image}" /></a>
         <div class="info">
           <a href="" class="author">${d.author.username}</a>
-          <span class="date">${new Date(d.createdAt).toLocaleString()}</span>
+          <span class="date">${fdate(d.createdAt)}</span>
         </div>
         <button class="btn btn-sm btn-outline-secondary">
           <i class="ion-plus-round"></i>
@@ -75,7 +83,7 @@ coral.ui.clientSideInclude(function (d) { /*
         <a href="profile.html"><img src="${d.author.image}" /></a>
         <div class="info">
           <a href="" class="author">${d.author.username}</a>
-          <span class="date">January 20th</span>
+          <span class="date">${fdate(d.createdAt)}</span>
         </div>
 
         <button class="btn btn-sm btn-outline-secondary">
@@ -90,6 +98,26 @@ coral.ui.clientSideInclude(function (d) { /*
           Favorite Post <span class="counter">(${d.favoritesCount})</span>
         </button>
       </div>
+    </div>
+    <div class="row">
+
+      <div coral='article-comments' class="col-xs-12 col-md-8 offset-md-2">
+        <script type='coral-template(d)'>
+          <div class="card">
+            <div class="card-block">
+              <p class="card-text">\${d.body}</p>
+            </div>
+            <div class="card-footer">
+              <a href="" class="comment-author">
+                <img src="\${d.author.image}" class="comment-author-img" />
+              </a>
+              &nbsp;
+              <a href="" class="comment-author">\${d.author.username}</a>
+              <span class="date-posted">\${fdate(d.createdAt)}</span>
+            </div>
+          </div>
+        <\/script>
+
     </div>
 <!--
     <div class="row">
@@ -108,37 +136,6 @@ coral.ui.clientSideInclude(function (d) { /*
           </div>
         </form>
 
-        <div class="card">
-          <div class="card-block">
-            <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-          </div>
-          <div class="card-footer">
-            <a href="" class="comment-author">
-              <img src="http://i.imgur.com/Qr71crq.jpg" class="comment-author-img" />
-            </a>
-            &nbsp;
-            <a href="" class="comment-author">Jacob Schmidt</a>
-            <span class="date-posted">Dec 29th</span>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-block">
-            <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-          </div>
-          <div class="card-footer">
-            <a href="" class="comment-author">
-              <img src="http://i.imgur.com/Qr71crq.jpg" class="comment-author-img" />
-            </a>
-            &nbsp;
-            <a href="" class="comment-author">Jacob Schmidt</a>
-            <span class="date-posted">Dec 29th</span>
-            <span class="mod-options">
-              <i class="ion-edit"></i>
-              <i class="ion-trash-a"></i>
-            </span>
-          </div>
-        </div>
 
       </div>
 

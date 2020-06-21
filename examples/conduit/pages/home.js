@@ -18,7 +18,6 @@ coral.ui.register('*articlesList', {
     var list = coral.ui.find ('.nav-pills')
     if (list) {
       if (!tag) {
-        //if (list.state.links.length==3) list.state.links.pop()
         list.state.links[1].state = 'active'
         if (list.state.links.length>2) list.state.links[2].state = ''
       } else {
@@ -70,8 +69,8 @@ coral.ui.clientSideInclude (function () {/*
               <div class="article-meta">
                 <a href="profile.html"><img src="${d.author.image}" /></a>
                 <div class="info">
-                  <a href="" class="author">${d.author.username}</a>
-                  <span class="date">${new Date(d.createdAt).toLocaleString()}</span>
+                  <a href="#/profile/${d.author.username}" class="author">${d.author.username}</a>
+                  <span class="date">${fdate(d.createdAt)}</span>
                 </div>
                 <button class="btn btn-outline-primary btn-sm pull-xs-right">
                   <i class="ion-heart"></i> ${d.favoritesCount}
