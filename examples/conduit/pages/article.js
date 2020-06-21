@@ -18,7 +18,7 @@ coral.ui.register('*article', {
     resource: function () {
       if (this.state.resource) {
         var url = baseurl + '/articles/' + this.state.resource
-        this.bind('state.articledata', '$json-raw$' + url)
+        this.bind('state.articledata', '$json$' + url)
       }
     }
   }
