@@ -51,7 +51,7 @@ coral.ui.clientSideInclude(function (d) { /*
         <button class="btn btn-sm btn-outline-secondary">
           <i class="ion-plus-round"></i>
           &nbsp;
-          Follow ${d.author.username} <span class="counter">(10)</span>
+          Follow ${d.author.username} <span class="counter">(${d.favoritesCount})</span>
         </button>
         &nbsp;&nbsp;
         <button class="btn btn-sm btn-outline-primary">

@@ -3,9 +3,9 @@ coral.ui.clientSideInclude (function () {/*
 
   <div class="user-info">
     <div class="container">
-      <div coral class="row"
+      <div coral class="row" id='profile'
             coral-s-resource="~~[coral=switcher]"
-            coral-s-profiledata='{"profile":{"username":"", "image":" ", "bio":""}}'
+            coral-s-profiledata='{"profile":{"username":"&nbsp;", "image":" ", "bio":"&nbsp;"}}'
             coral-s-datasrc="state.profiledata.profile"
         >
           <script type="coral-observer(updates)" name="resource">
@@ -34,21 +34,24 @@ coral.ui.clientSideInclude (function () {/*
     <div class="row">
 
       <div coral class="col-xs-12 col-md-10 offset-md-1"
+        coral-s-modifier="~~[coral=switcher]"
         coral-s-resource="~~[coral=switcher]"
+        coral-s-author="~state.profiledata~#profile"
         coral-s-articledata
         coral-s-datasrc="state.articledata.articles"
         >
         <script type="coral-observer(updates)" name="resource">
-          this.bind('state.articledata', '$json$' + baseurl + '/articles/?author=' + this.state.resource)
+          if (this.state.modifier) this.bind('state.articledata', '$json$' + baseurl + '/articles/?favorited=' + this.state.resource)
+          else this.bind('state.articledata', '$json$' + baseurl + '/articles/?author=' + this.state.resource)
         </script>
         <script type='coral-template(d)' coral-slot='header'>
           <div class="articles-toggle">
             <ul class="nav nav-pills outline-active">
               <li class="nav-item">
-                <a class="nav-link active" href="">My Articles</a>
+                <a class="nav-link ${d.state.modifier?'':'active'}" href="#/profile/${(d.state.author||{}).username}">My Articles</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="">Favorited Articles</a>
+                <a class="nav-link ${d.state.modifier?'active':''}" href="#/profile/${(d.state.author||{}).username}/favorites">Favorited Articles</a>
               </li>
             </ul>
           </div>
@@ -57,7 +60,7 @@ coral.ui.clientSideInclude (function () {/*
         <script type='coral-template(d)' >
           <div class="article-preview">
             <div class="article-meta">
-              <a href="profile.html"><img src="${d.author.image}" /></a>
+              <a href="#/profile/${d.author.username}"><img src="${d.author.image}" /></a>
               <div class="info">
                 <a href="#/profile/${d.author.username}" class="author">${d.author.username}</a>
                 <span class="date">${fdate(d.createdAt)}</span>
@@ -79,9 +82,7 @@ coral.ui.clientSideInclude (function () {/*
               <span>Read more...</span>
             </a>
           </div>
-        </div>
-      </script>
-
+        </script>
     </div>
   </div>
 

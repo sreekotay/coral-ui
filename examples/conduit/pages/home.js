@@ -67,7 +67,7 @@ coral.ui.clientSideInclude (function () {/*
           <script type='coral-template(d)'>
             <div class="article-preview">
               <div class="article-meta">
-                <a href="profile.html"><img src="${d.author.image}" /></a>
+                <a href="#/profile/${d.author.username}"><img src="${d.author.image}" /></a>
                 <div class="info">
                   <a href="#/profile/${d.author.username}" class="author">${d.author.username}</a>
                   <span class="date">${fdate(d.createdAt)}</span>

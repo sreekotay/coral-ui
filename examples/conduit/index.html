@@ -48,7 +48,7 @@ s  -->
   // ============================
   coral.ui.register ('switcher', {
     update: function () {return 'done'},
-    state :['page', 'resource', 'tag'],
+    state :['page', 'resource', 'tag', 'modifier'],
     mutate: function () {
       if (this.state.page) this.bind ('state.pagedata', '$js$pages/' + this.state.page + '.js') 
     },
@@ -57,6 +57,7 @@ s  -->
         var parts = window.location.hash.split('/')
         this.state.page = parts[1] || 'home'
         this.state.resource = parts[2]
+        this.state.modifier = parts[3]
         this.state.tag = getUrlParameter('tag')
       }, 
       coralLoadHTMLFail: function () {

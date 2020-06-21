@@ -16,7 +16,7 @@ function UIFactory (opts) {
         var slot = slots[_s.dataslot || 'default']
         if (!slot) return 'done'
         if (!_s.datasrc) return 'done'
-        var dc = ('datactx' in _s) ? this.dot(_s.datactx).value : {}
+        var dc = ('datactx' in _s) ? this.dot(_s.datactx).value : this
         var dl = ('datasrc' in _s) ? this.dot(_s.datasrc).value : this
         var gk = _s.genkey
         var gen = (dl && slot) || (slots.empty && slots.empty.text) || { text: '<div> </div>' }
