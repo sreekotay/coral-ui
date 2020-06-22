@@ -5,7 +5,8 @@
 coral.ui.register('*article', {
   state: {
     datasrc: 'state.articledata.article',
-    articledata: null,
+    articledata: { article: { title: '&nbsp;test', author: { username: '&nbsp;', image: ' ' }, body: ' ', favoritesCount: 0 } },
+    commentsdata: null,
     taglist: null
   },
   bind: {
@@ -15,24 +16,30 @@ coral.ui.register('*article', {
     articledata: function () {
       if (this.state.articledata) this.state.taglist = this.state.articledata.article.tagList
     },
-    resource: function () {this.bind('state.articledata', '$json$' + baseurl + '/articles/' + this.state.resource)}
+    resource: function (updates) { 
+      if (updates.value) {
+        this.bind('state.articledata', '$json$' + baseurl + '/articles/' + this.state.resource) 
+        this.bind('state.commentsdata', '$json$' + baseurl + '/articles/' + this.state.resource + '/comments')
+      }
+    }
   }
 })
 
 coral.ui.register('*article-comments', {
   state: {
     datasrc: 'state.commentsdata.comments',
-    commentsdata: null,
   },
   bind: {
-    resource: { selector: '[coral=switcher]' } //  same as: coral-s-tag="~~[coral=switcher]"
-  },
-  observers: {
-    resource: function () { this.bind('state.commentsdata', '$json$' + baseurl + '/articles/' + this.state.resource + '/comments')}
+    commentsdata: { selector: '[coral=article]' } //  same as: coral-s-tag="~~[coral=switcher]"
   }
 })
 
-coral.ui.loadScript('https://cdn.jsdelivr.net/npm/marked/marked.min.js')
+if (!window.marked) window.marked = function(s) { return s }
+coral.ui.loadScript('https://cdn.jsdelivr.net/npm/marked/marked.min.js', function () {
+  console.log ('marked')
+  var ui = coral.ui.find('[coral=article]')
+  if (ui) ui.render() // let's us load in parallel
+})
 coral.ui.clientSideInclude(function (d) { /*
 <div class="article-page" coral=article>
   <script type=coral-template(d)>
@@ -67,16 +74,15 @@ coral.ui.clientSideInclude(function (d) { /*
   <div class="container page">
 
     <div class="row article-content">
-      <p>
       ${marked(d.body)}
+    </div>
+    <div coral class="tag-list" coral-s-datasrc="state.taglist" coral-s-taglist="~~[coral=article]" >
+      <script type='coral-template(d)'>
+        <a href='#?tag=\${d}'  class="tag-pill tag-default tag-outline" >\${d}</a>
+      <\/script>
     </div>
 
     <hr />
-      <div coral class="tag-list" coral-s-datasrc="data.taglist" coral-s-taglist="~~[coral=article]" >
-        <script type='coral-template(d)'>
-          <a href='#?tag=\${d}'  class="tag-pill tag-default" >\${d}</a>
-        <\/script>
-      </div>
 
     <div class="article-actions">
       <div class="article-meta">
@@ -135,7 +141,6 @@ coral.ui.clientSideInclude(function (d) { /*
             </button>
           </div>
         </form>
-
 
       </div>
 

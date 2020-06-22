@@ -41,7 +41,8 @@ s  -->
   <script src='layout/footer.js'></script>
   <script>
   var baseurl = 'https://conduit.productionready.io/api'
-  function fdate(d) { return new Date(d).toLocaleString() }
+  var options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+  function fdate(d) { return new Date(d).toLocaleString(undefined, options) }
 
   // ============================
   // our "router"

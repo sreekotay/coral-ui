@@ -23,17 +23,21 @@ function UIFactory (opts) {
         var key = _s.datakey; var uk
         if (!Array.isArray(dl)) dl = [dl]
         if (slots.header) this.html(-1, slots.header.script ? slots.header.script(dc) : slots.header.text)
-        var hm = this.__.hmap || {}
-        dc.__hmap__ = hm
+        // var hm = this.__.hmap || {}; dc.__hmap__ = hm
+        /*
+        if (this.name=='article-comments')
+          this.name=this.name
+        if (this.name=='article')
+          this.name=this.name
+        */
         for (var i = 0; i < dl.length; i++) {
           var t = typeof (dl[i])
           if (dl[i]) uk = key === undefined ? dl[i].__key__ : dl[i][key]
           if (gk && uk === undefined && t === 'object') uk = xs.privateprop(dl[i], '__key__', 'k' + rf_key++)
           var row = gen.script ? gen.script(dl[i], i, dc) : gen.text
-          //          var row = gen.script ? gen.script.call(this, dl[i], i, dc) : this.htag('div').c([this.hdata(' ')])//gen.text
           this.html(uk || i, row)
         }
-        delete dc.__hmap__
+        // delete dc.__hmap__
         if (slots.footer) this.html(-2, slots.footer.script ? slots.footer(dc) : slots.footer.text)
       }
     }
@@ -49,14 +53,14 @@ function UIFactory (opts) {
   function run (arg) {
     var d = (arg || document)
     var r = []
-    var rels = d.querySelectorAll(':not([coral-stage])[coral]')
+    var rels = d.querySelectorAll('[coral]')
     for (var i = 0; i < rels.length; i++) {
       if (!rels[i].coral) {
         var rr = UIDOM(rels[i], d.coral)
         publishLF(rr, 'mount')
         if (rr) rr.render_()
         r.push(rr)
-      }
+      } else rels[i].coral.render_()
     }
     return r
   }
@@ -165,8 +169,7 @@ function UIFactory (opts) {
 
     // make UI
     var defaultData = rf_registry[name]
-    var coral = new opts.use(el, defaultData, localData)
-    coral.name = name
+    var coral = new opts.use(name, el, defaultData, localData)
     el.setAttribute('coral-stage', 'mounted')
 
     // register listeners
@@ -276,7 +279,7 @@ function UIFactory (opts) {
   // ============================================
   // UI - constructor
   // ============================================
-  function UI (rootEl, setup, localSetup) {
+  function UI (name, rootEl, setup, localSetup) {
     setup = setup || {}
     localSetup = localSetup || {}
     var rf = this
@@ -291,6 +294,7 @@ function UIFactory (opts) {
 
     var sh = this.methods; if (sh) for (var k in sh) sh[k] = isfunction(sh[k]) ? sh[k].bind(rf) : sh[k] // bind to coral
 
+    this.name = name
     this.rootEl = rootEl
     rootEl.coral = this
     _.obsf = UI.prototype.react.bind(rf)
@@ -405,7 +409,7 @@ function UIFactory (opts) {
     var pp = copyprop.split('.')
     var sp = xs.dot(refobj, pp)
     if (sp.obj) return sp
-    var fp = pp;  var oc = refobj
+    var fp = pp; var oc = refobj
     for (var i = 0; i < fp.length; i++) {
       var nc = oc[fp[i]]; if (nc === undefined || nc === null || typeof (nc) !== 'object') oc[fp[i]] = (i == fp.length - 1 ? undefined : {}); oc = oc[fp[i]]
     }
@@ -593,6 +597,7 @@ function UIFactory (opts) {
     // } catch (err) { return false }
   }
   function mergeNode (c, n) {
+    if (!c) return n
     if (c.nodeType === 3 && n.nodeType === 3) {
       c.nodeValue = n.nodeValue
       return c
@@ -640,10 +645,6 @@ function UIFactory (opts) {
   UI.prototype.htmlEnd = function () {
     var _ = this.__
     var genid = _.hgeneration
-    var hta = ''
-    var ha = _.harr
-    var hm = _.hmap
-    if (!ha) return
     var fl = this.__.fcounter
     var prev = null
     if (fl === 0) {
@@ -652,6 +653,10 @@ function UIFactory (opts) {
       return
     }
     if (genid === 0) this.rootEl.innerHTML = '' // do this first
+    var ha = _.harr
+    var hm = _.hmap
+    var hta = ''
+    if (!ha) return
     for (var k in hm) { // delete untouched
       var hc = hm[k]
       if (hc.generation === genid) continue
@@ -663,7 +668,7 @@ function UIFactory (opts) {
     var div = document.createElement(root.nodeName)
 
     if (ha.html) {
-      // div.innerHTML = ha.html
+      // root.innerHTML = ha.html; return
       div = hydrate(root, ha.html)
       ha.html = ''
     }
@@ -782,7 +787,8 @@ function UIFactory (opts) {
       if (hc.generation === genid) coralError('duplicate html() id')
       hc.generation = genid
       ha[idx] = hc // set the position
-      if (hc.hsh === hsh) return
+      if (hc.el && !hc.el.parentNode) hc.el = null
+      if (hc.el && hc.hsh === hsh) return
       hc.h = ha.htmlIdx++
       /*
       hc.hh = typeof(htmlGen)==='object' && htmlGen
@@ -1027,16 +1033,19 @@ function UIFactory (opts) {
 
 window.coral.ui = UIFactory({ autorun: true })
 
-
 // ============================================
 // clientSideInclude ()
 // ============================================
 ;(function () {
   var coral = window.coral = window.coral || {}; coral.ui = coral.ui || {}
-  coral.ui.loadScript = function (url) {
-    if (document.querySelector('script[url="' + (url) + '"]')) return 
-    var s = document.createElement('script'); s.src = url; s.setAttribute('url', url)
+  coral.ui.loadScript = function (url, cb) {
+    if (document.querySelector('script[url="' + (url) + '"]')) { if (cb) cb(); return }
+    var s = document.createElement('script')
+    s.src = url
+    s.setAttribute('url', url)
+    s.onload = cb
     document.getElementsByTagName('head')[0].appendChild(s)
+    // setInterval (()=>document.getElementsByTagName('head')[0].appendChild(s), 2000)
   }
   coral.ui.clientSideInclude = function (data) {
     function isfunction (obj) { return !!(obj && obj.constructor && obj.call && obj.apply) }
