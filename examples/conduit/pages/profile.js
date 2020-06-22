@@ -1,3 +1,7 @@
+function loadProfilArticles(updates) {
+  if (this.state.modifier=='favorites') this.bind('state.articledata', '$json$' + baseurl + '/articles/?favorited=' + this.state.resource)
+  else this.bind('state.articledata', '$json$' + baseurl + '/articles/?author=' + this.state.resource)
+}
 coral.ui.clientSideInclude (function () {/*
 <div class="profile-page">
 
@@ -34,24 +38,21 @@ coral.ui.clientSideInclude (function () {/*
     <div class="row">
 
       <div coral class="col-xs-12 col-md-10 offset-md-1"
-        coral-s-modifier="~~[coral=switcher]"
         coral-s-resource="~~[coral=switcher]"
+        coral-s-modifier="~~[coral=switcher]"
         coral-s-author="~state.profiledata~#profile"
         coral-s-articledata
         coral-s-datasrc="state.articledata.articles"
         >
-        <script type="coral-observer(updates)" name="resource">
-          if (this.state.modifier) this.bind('state.articledata', '$json$' + baseurl + '/articles/?favorited=' + this.state.resource)
-          else this.bind('state.articledata', '$json$' + baseurl + '/articles/?author=' + this.state.resource)
-        </script>
+        <script type="coral-observer(updates)" name="modifier">loadProfilArticles.call(this,updates)</script>
         <script type='coral-template(d)' coral-slot='header'>
           <div class="articles-toggle">
             <ul class="nav nav-pills outline-active">
               <li class="nav-item">
-                <a class="nav-link ${d.state.modifier?'':'active'}" href="#/profile/${(d.state.author||{}).username}">My Articles</a>
+                <a class="nav-link ${d.state.modifier?'':'active'}" href="#/profile/${(d.state.author||{}).profile.username}">My Articles</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link ${d.state.modifier?'active':''}" href="#/profile/${(d.state.author||{}).username}/favorites">Favorited Articles</a>
+                <a class="nav-link ${d.state.modifier?'active':''}" href="#/profile/${(d.state.author||{}).profile.username}/favorites">Favorited Articles</a>
               </li>
             </ul>
           </div>

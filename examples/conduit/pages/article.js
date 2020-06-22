@@ -90,9 +90,9 @@ coral.ui.clientSideInclude(function (d) { /*
 
     <div class="article-actions">
       <div class="article-meta">
-        <a href="profile.html"><img src="${d.author.image}" /></a>
+        <a href="#/profile/${(d.author||{}).username}"><img src="${d.author.image}" /></a>
         <div class="info">
-          <a href="" class="author">${d.author.username}</a>
+          <a href="#/profile/${(d.author||{}).username}" class="author">${d.author.username}</a>
           <span class="date">${fdate(d.createdAt)}</span>
         </div>
 
@@ -118,11 +118,11 @@ coral.ui.clientSideInclude(function (d) { /*
               <p class="card-text">\${d.body}</p>
             </div>
             <div class="card-footer">
-              <a href="" class="comment-author">
+              <a href=""#/profile/\${(d.author||{}).username}" class="comment-author">
                 <img src="\${d.author.image}" class="comment-author-img" />
               </a>
               &nbsp;
-              <a href="" class="comment-author">\${d.author.username}</a>
+              <a href="#/profile/\${(d.author||{}).username}" class="comment-author">\${d.author.username}</a>
               <span class="date-posted">\${fdate(d.createdAt)}</span>
             </div>
           </div>
