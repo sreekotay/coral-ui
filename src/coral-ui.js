@@ -426,7 +426,7 @@ function UIFactory (opts) {
     }
     return str.replace('{JSONP}', fname)
   }
-
+  function looseNode(el) {var r = el && el.getRootNode(); return r && r!==document && r.nodeName!=='#document-fragment'}
   function findParentCoral (rf, count) {
     var el = rf && rf.rootEl
     while (rf && el) {
@@ -481,7 +481,7 @@ function UIFactory (opts) {
     var dp = realizeSource(rf, proppath)
     if (!dp.obj) coralError('state bind not found: ' + proppath)
     var f = function (u) {
-      if (!rf.rootEl || rf.rootEl.getRootNode() !== document) {
+      if (looseNode(rf.rootEl)) {
         rf.unmount()
         return
       }
@@ -502,10 +502,12 @@ function UIFactory (opts) {
     publishLF(this, 'beforeRender')
     var t = new Date()
     var rel = this.rootEl
-    if (!rel || rel.getRootNode() !== document) {
+    if (looseNode(rel)) {
       this.unmount()
       return
     }
+    if (!rel.parentNode)
+      return
     var update = this.__.update
     if (update) {
       var fc = this.__.fcounter
@@ -513,15 +515,18 @@ function UIFactory (opts) {
       fc = this.__.fcounter //  reset it
       var res = update.call(this, this.slots) || ''
       if (this.__.harr) this.htmlEnd()
-      else if (typeof (res) === 'string') {
-        if (res !== 'done') rel.innerHTML = res // a way to "out"
-      } else {
-        rel.innerHTML = ''
-        if (Array.isArray(res)) res.forEach(function (e) { rel.appendChild(e) })
-        else rel.appendChild(res)
+      else {
+        if (typeof (res) === 'string') {
+          if (res !== 'done') rel.innerHTML = res // a way to "out"
+        } else {
+          rel.innerHTML = ''
+          if (Array.isArray(res)) res.forEach(function (e) { rel.appendChild(e) })
+          else rel.appendChild(res)
+        }
+        run(rel) // hydrate nested components 
       }
-      if (rel.parentNode.classList.contains('container')) { rel = rel }
-      run(rel) // hydrate nested components (should we only do this if we have a update()?)
+      if (!rel.parentNode)
+        return
       if (rel.parentNode.classList.contains('container')) { console.log('render', new Date() - t) }
     }
     publishLF(this, 'afterRender')
@@ -598,6 +603,10 @@ function UIFactory (opts) {
   }
   function mergeNode (c, n) {
     if (!c) return n
+    if (!n)
+      return n;
+    c.coral = n.coral
+    if (c.coral) c.coral.rootEl = c
     if (c.nodeType === 3 && n.nodeType === 3) {
       c.nodeValue = n.nodeValue
       return c
@@ -668,8 +677,9 @@ function UIFactory (opts) {
     var div = document.createElement(root.nodeName)
 
     if (ha.html) {
-      // root.innerHTML = ha.html; return
+      // root.innerHTML = ha.html; run(root); return
       div = hydrate(root, ha.html)
+      run(div) // hydrate nested components 
       ha.html = ''
     }
 
@@ -681,31 +691,14 @@ function UIFactory (opts) {
       // if (typeof (h) === 'object') h = h.html()
       if (typeof (h) === 'number') {
         var n = div.childNodes[hc.h - cnt]
-        /*
-        if (typeof (hc.hh) === 'object') {
-          var ch = c.c
-          var nh = hc.hh
-          nh.el = n
-          ch.el = c
-          nh = hmerge(ch, nh)
-          if (nh !== ch) {
-            hc.el = c = nh.el
-            cnt++
-          }
-          c.c = nh
-        } else {
-        */
-        // n = morphdom(c,n)
         n = mergeNode(c, n)
         if (n !== c) {
           hc.el = c = n
           cnt++
-        }
-        // }
+        } 
       } else if (h) {
         if (/* 0 && */i >= root.childNodes.length) hta += h
         else hc.el = c = hydrate(root, h).firstChild
-        // c.c = hc.h
       }
       hc.idx = i
       hc.h = ''
@@ -725,7 +718,10 @@ function UIFactory (opts) {
     ha.length = fl
 
     var rcl = root.childNodes.length
-    if (hta) root.insertAdjacentHTML('beforeend', hta) // end insert
+    if (hta) {
+      run(root) // hydrate nested components 
+      root.insertAdjacentHTML('beforeend', hta) // end insert
+    }
     root = getAttachPoint(this.rootEl)
     if (root && ha.length !== root.childNodes.length) {
       console.error('inconsistent count - must be 1 html() entity for hmtl()')
@@ -747,31 +743,10 @@ function UIFactory (opts) {
     var v = this.__.harr.wmap.get(el)
     return v === undefined ? -1 : v
   }
-  /*
-  UI.prototype.htmlKeyToIdx = function (id) {
-    var hm = this.__.hmap
-    if (!hm || !hm[id]) return null
-    return hm[id].idx | 0
-  }
-  UI.prototype.htmlFromKey = function (id) {
-    var hm = this.__.hmap
-    if (!hm || !hm[id]) return null
-    return hm[id].el
-  }
-*/
-  // const typecache = {}
   function hydrate (type, h) {
     rf_range.selectNode(type)
     var el = rf_range.createContextualFragment(h)
     return type.nodeName === 'TBODY' ? el.childNodes[0] : el
-    /*
-    type = type.nodeName
-    var t = typecache[type]
-    if (!t) t = typecache[type] = document.createElement(type.nodeName)
-    if (!h) return t
-    t.innerHTML = h
-    return t.childNodes[0]
-    */
   }
   UI.prototype.html = function (id, htmlGen) {
     if (!this.__.harr) this.htmlBegin()
@@ -790,125 +765,15 @@ function UIFactory (opts) {
       if (hc.el && !hc.el.parentNode) hc.el = null
       if (hc.el && hc.hsh === hsh) return
       hc.h = ha.htmlIdx++
-      /*
-      hc.hh = typeof(htmlGen)==='object' && htmlGen
-      ha.html += (typeof (htmlGen) === 'object' ? htmlGen.html() : htmlGen)
-      */
       ha.html += htmlGen
       hc.hsh = hsh
-      // hc.split = splitter(htmlGen)
     } else {
       hc = { h: htmlGen, hsh: hsh, idx: idx, id: id, generation: genid, el: null }
       ha.splice(idx, 0, hc)
       hm[id] = hc
     }
   }
-  /*
-  function hcopy (c, n) {
-    c.tag = n.tag
-    c.d = n.d
-    c.c = n.c
-    c.el = n.el
-  }
-  function hcopyAttributes (c, n) {
-    try {
-      var ca = c.a
-      var na = n.a
-      for (var a in na) {
-        if (ca[a] !== na[a]) {
-          if (rf_tagvalue[c.nodeName] && a === 'value') {
-            c.value = na[a]
-          }
-          ca[a] = na[a]
-          c.el.setAttribute(a, ca[a])
-        }
-      }
-      for (a in ca) {
-        if (!(a in na)) {
-          delete ca[a]
-          c.el.removeAttribute(a)
-        }
-      }
-      return true
-    } catch (err) {
-      console.error(err)
-    }
-    return false
-  }
-  function hmergeAttempt (c, n) {
-    if (!c.tag && !n.tag) {
-      if (c.d !== n.d) {
-        c.d = n.d
-        c.el.nodeValue = n.el.nodeValue
-      }
-      return true
-    }
-    if (c.tag !== n.tag || !hcopyAttributes(c, n)) {
-      return false
-    }
 
-    // copy attributes
-    if (!c.el || !n.el) { debugger}
-
-    if ((c.c && c.c.length) || (n.c && n.c.length)) {
-      var i
-      var cc = (c.c && c.c[0] && c.c) || []; var cce = c.el.childNodes
-      var nc = (n.c && n.c[0] && n.c) || []; var nce = n.el.childNodes
-      var il = i = Math.min(cc.length, nc.length)
-      while (il < cce.length) c.el.removeChild(cce[i])
-      while (il < nce.length) c.el.appendChild(nce[i])
-      c.c.length = n.c.length
-      while (--i >= 0) {
-        var ccn = cc[i]; ccn.el = cce[i]
-        var ncn = nc[i]; ncn.el = nce[i]
-        if (!ccn.tag && !ncn.tag) { if (ccn.d !== ncn.d) { ccn.d = ncn.d; ccn.el.nodeValue = ncn.el.nodeValue } continue }
-        if (ccn.tag !== ncn.tag || !hmergeAttempt(ccn, ncn)) {
-          c.el.replaceChild(ncn.el, ccn.el)
-          hcopy(ccn, ncn)
-        }
-      }
-    }
-    return true
-  }
-
-  function hmerge (c, n) {
-    if (c.tag !== n.tag || !hmergeAttempt(c, n)) {
-      c.el.parentNode.replaceChild(n.el, c.el)
-      hcopy(c, n)
-      return n
-    }
-    return c
-  }
-  function HTAG (t, data) {
-    var p = HTAG.prototype
-    this.tag = t
-    this.a = p.a
-    this.c = p.c
-    this.d = data
-  }
-  HTAG.prototype.a = function (o) {
-    this.a = o; this.a[0] = true; return this
-  }
-  HTAG.prototype.c = function (c) {
-    this.c = c; return this
-  }
-  HTAG.prototype.html = function () {
-    if (!this.tag) return this.d
-    var a = this.a; var attrs = ''
-    if (a && a[0]) {
-      for (var k in a) {
-        if (k !== '0') { attrs += ' ' + k + '="' + a[k].replace(/"/, '\\"') + '"' }
-      }
-    }
-    var c = this.c; var chtml = ''
-    if (c && c[0]) for (var i = 0; i < c.length; i++) chtml += c[i].html()
-    return '<' + this.tag + attrs + '>' + chtml +
-           '</' + this.tag + '>'
-  }
-
-  UI.prototype.htag = function (t) { return new HTAG(t) }
-  UI.prototype.hdata = function (d) { return new HTAG(false, d) }
-*/
   UI.prototype.dot = function (path, value) {
     var v = xs.dot(this, path)
     if (arguments.length > 1) {
@@ -1045,7 +910,7 @@ window.coral.ui = UIFactory({ autorun: true })
     s.setAttribute('url', url)
     s.onload = cb
     document.getElementsByTagName('head')[0].appendChild(s)
-    // setInterval (()=>document.getElementsByTagName('head')[0].appendChild(s), 2000)
+    //setTimeout (()=>document.getElementsByTagName('head')[0].appendChild(s), 200000)
   }
   coral.ui.clientSideInclude = function (data) {
     function isfunction (obj) { return !!(obj && obj.constructor && obj.call && obj.apply) }

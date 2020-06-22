@@ -74,12 +74,16 @@ coral.ui.clientSideInclude(function (d) { /*
   <div class="container page">
 
     <div class="row article-content">
+      <div class='col-xs-12'>
+      <div>
       ${marked(d.body)}
-    </div>
-    <div coral class="tag-list" coral-s-datasrc="state.taglist" coral-s-taglist="~~[coral=article]" >
-      <script type='coral-template(d)'>
-        <a href='#?tag=\${d}'  class="tag-pill tag-default tag-outline" >\${d}</a>
-      <\/script>
+      </div>
+      <div coral class="tag-list" coral-s-datasrc="state.taglist" coral-s-taglist="~~[coral=article]" >
+        <script type='coral-template(d)'>
+          <a href='#?tag=\${d}'  class="tag-pill tag-default tag-outline" >\${d}</a>
+        <\/script>
+      </div>
+      </div>
     </div>
 
     <hr />
