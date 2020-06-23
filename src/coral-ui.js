@@ -483,7 +483,7 @@ function UIFactory (opts) {
     if (_bp.copy) { dp.obj[dp.prop] = sp.obj[sp.prop]; return }
 
     var f = function (u) { if (looseNode(rf.rootEl)) { rf.unmount(); return } rf.react(u) }
-    if (dp.obj !== refobj.state) {
+    if (sp.obj !== refobj.state) {
       xs.observe(refobj.state, function (updates) {
         // to handldle the nested case
         if (_b[proppath].copy || looseNode(rf.rootEl)) return
@@ -507,7 +507,7 @@ function UIFactory (opts) {
   }
   function render () {
     publishLF(this, 'beforeRender')
-    var t = new Date()
+    //var t = new Date()
     var rel = this.rootEl
     if (looseNode(rel)) { this.unmount(); return }
     var update = this.__.update
@@ -527,7 +527,7 @@ function UIFactory (opts) {
         }
         run(rel) // hydrate nested components
       }
-      if (rel.parentNode.classList.contains('container')) { console.log('render', new Date() - t) }
+      //if (rel.parentNode.classList.contains('container')) { console.log('render', new Date() - t) }
     }
     publishLF(this, 'afterRender')
   }
@@ -718,8 +718,8 @@ function UIFactory (opts) {
 
     var rcl = root.childNodes.length
     if (hta) {
-      run(root) // hydrate nested components
       root.insertAdjacentHTML('beforeend', hta) // end insert
+      run(root) // hydrate nested components
     }
     root = getAttachPoint(this.rootEl)
     if (root && ha.length !== root.childNodes.length) {

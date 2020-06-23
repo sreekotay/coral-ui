@@ -3,7 +3,8 @@
 <head>
   <title>Sierpinski</title>
   <meta name='viewport' content='width=device-width'>
-  <script src='../dist/coral-ui-min.js'></script>
+  <script src='../src/coral-observe.js'></script>
+  <script src='../src/coral-ui.js'></script>
 </head>
 <style>
 [coral=dot]  {
@@ -24,7 +25,11 @@
 }
 </style>
 <body>
-  <div coral=myapp  class=container coral-s-seconds=1></div>
+  <div coral=myapp  class=container coral-s-seconds=1>
+    <script type=coral-template(d)>
+      <div coral=triangle coral-s-x=0 coral-s-y=0 coral-s-s=1000></div>
+    </script>
+  </div>
 <script>
     // =====================
     // triangle
@@ -41,7 +46,7 @@
         const transform = 'scaleX(' + (scale / 2.1) + ') scaleY(0.7) translateZ(0.1px)';
         this.rootEl.style.transform = transform
 
-        this.html (0,  '<div coral=triangle coral-s-x=0 coral-s-y=0 coral-s-s=1000 coral-s-seconds=' + (1||this.state.seconds) + '></div>')
+        this.html (0,  this.slots.default.script(this.state))
       },
       observers: {
         elapsed: function() {this.state.seconds = ((this.state.elapsed/1000)|0) % 10}
@@ -67,10 +72,17 @@
     // triangle
     // =====================
     var targetSize = 25
+    /*
     var dottempl = coral.ui.template ("x, y, targetSize, seconds", 
-                                    "<div coral=dot coral-s-x=${x - targetSize/2} coral-s-y=${y - targetSize /2} coral-s-size=${targetSize} coral-s-text='~state.seconds~.container'></div>")//'${seconds}'></div>") 
+                                    "<div coral=dot coral-s-x=${x - targetSize/2} coral-s-y=${y - targetSize /2} coral-s-size=${targetSize} coral-s-text='${seconds}'></div>") 
+    var tritempl = coral.ui.template ("x, y, s, seconds", 
+                                    "<div coral=triangle coral-s-x=${x} coral-s-y=${y} coral-s-s=${s} coral-s-seconds=${seconds}></div>")
+                                    */
+    var dottempl = coral.ui.template ("x, y, targetSize, seconds", 
+                                      "<div coral=dot coral-s-x=${x - targetSize/2} coral-s-y=${y - targetSize /2} coral-s-size=${targetSize} coral-s-text='~state.seconds~.container'></div>")//'${seconds}'></div>") 
     var tritempl = coral.ui.template ("x, y, s, seconds", 
                                     "<div coral=triangle coral-s-x=${x} coral-s-y=${y} coral-s-s=${s}></div>")// coral-s-seconds=${seconds}></div>")
+
     coral.ui.register ('triangle',  {
       update: function () {
         var s = this.state.s | 0; var x = this.state.x | 0; var y = this.state.y | 0
@@ -80,9 +92,22 @@
           return
         }
         s /= 2
-        this.html(0, tritempl(x,y-s/2, s, seconds))
-        this.html(1, tritempl(x-s,y+s/2, s, seconds))
-        this.html(2, tritempl(x+s,y+s/2, s, seconds))
+        if (1) {
+          this.html(0, tritempl(x,y-s/2, s, seconds))
+          this.html(1, tritempl(x-s,y+s/2, s, seconds))
+          this.html(2, tritempl(x+s,y+s/2, s, seconds))
+          return
+        }
+        var h = ''
+        h += tritempl(x,y-s/2, s, seconds)
+        h += tritempl(x-s,y+s/2, s, seconds)
+        h += tritempl(x+s,y+s/2, s, seconds)
+        /*
+        */
+        var p = this.rootEl.parentNode
+        this.rootEl.innerHTML = h
+        //coral.ui.run ( this.rootEl  ) 
+        return 'done'
       }
     })
 
@@ -111,8 +136,9 @@
             borderRadius: (s / 2) + 'px', lineHeight: (s) + 'px',
             background:  props.hover ? '#ff0' : '#61dafb'
         }
+        var text = props.text || ' '
         this.styleBag(style)
-        this.html (0, (props.hover ? '*' + props.text + '*' : props.text) + '')
+        this.html (0, (props.hover ? '*' + text + '*' : text) + '')
       },
       observers: {
         text: function () {
