@@ -159,7 +159,7 @@
   var autoclose = ['<html', '<head', '<body', '<p', '<dt', '<dd', '<li', '<option',
     '<thead', '<th', '<tbody', '<tr', '<td', '<tfoot', '<colgroup',
     '<h1', '<h2', '<h3', '<h4', '<h5', '<h6', '<a', '<i', '<b', '<s', '<button', '<video']
-  var noclose = ['<img', '<input', '<br', '<meta', '<area', '<base', '<input', '<col', '<hr', '<embed', '<link', '<param', '<track', '<wbr', '<source']
+  var noclose = ['<!', '<img', '<input', '<br', '<meta', '<area', '<base', '<input', '<col', '<hr', '<embed', '<link', '<param', '<track', '<wbr', '<source']
   var nocloseend
   function arrtoobj_ (arr) { var o = {}; for (var i = 0; i < arr.length; i++) o[arr[i]] = true; return o }
   function filltags () {
@@ -168,9 +168,15 @@
     nocloseend = {}; for (var k in noclose) nocloseend[k[0] + '/' + k.substring(1)] = true
   }
   function pushel (f, t) {
+    if (!f) {
+      f = f
+      return
+    }
     var td = t && t.trim()
     if (!td) return f
     var tag = (td[0] === '<') && td.split(' ')[0]
+    if (tag) tag = tag.toLowerCase()
+    if (tag[1]=='!') tag = tag.substring(0, 2)
     // tag = tag && tag.split('/')[0] // ugh for self-closing - skip for now
     var el = { d: t, p: f.p, tag: tag, c: null } // el
     if (el.d[0] !== '<' || noclose[tag]) { // add it

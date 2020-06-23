@@ -1,34 +1,66 @@
+coral.ui.register('*login', {
+  state: ['page', 'userdata'],
+  data: { },
+  bind: {
+    page: { selector: '[coral=switcher]' }
+  },
+  listeners: {
+    input: function (event) {
+      this.data[event.target.getAttribute('placeholder')] = event.target.value
+    },
+    submit: function (event) {
+      if (this.state.page==='login') {
+        this.bind('state.userdata', '$json:POST$' + baseurl + '/users/login', undefined, {
+          user: {
+            email: this.data['Email'],
+            password: this.data['Password']
+          }
+        })
+      }
+    }
+
+  }
+})
+
 coral.ui.clientSideInclude(function () { /*
 <div class="auth-page">
   <div class="container page">
     <div class="row">
 
-      <div class="col-md-6 offset-md-3 col-xs-12">
-        <h1 class="text-xs-center">Sign up</h1>
-        <p class="text-xs-center">
-          <a href="">Have an account?</a>
-        </p>
+      <div coral=login coral-s-datasrc='state'
+           class="col-md-6 offset-md-3 col-xs-12">
+        <script type='coral-template(d)'>
+          <div>
+            <h1 class="text-xs-center"> ${d.page==='login' ? 'Sign in' : 'Sign up'}</h1>
+            ${d.page==='login'?'':'\
+              <p class="text-xs-center">\
+                <a href="#/login">Have an account?</a>\
+              </p>'}
+            <div>
+              ${d.emailtaken?'\
+                <ul class="error-messages">\
+                  <li>That email is already taken</li>\
+                </ul>':''}
 
-        <ul class="error-messages">
-          <li>That email is already taken</li>
-        </ul>
-
-        <form>
-          <fieldset class="form-group">
-            <input class="form-control form-control-lg" type="text" placeholder="Your Name">
-          </fieldset>
-          <fieldset class="form-group">
-            <input class="form-control form-control-lg" type="text" placeholder="Email">
-          </fieldset>
-          <fieldset class="form-group">
-            <input class="form-control form-control-lg" type="password" placeholder="Password">
-          </fieldset>
-          <button class="btn btn-lg btn-primary pull-xs-right">
-            Sign up
-          </button>
-        </form>
+              <form onsubmit='event.preventDefault();' coral-on-submit>
+                ${d.page==='login' ? '' : '\
+                <fieldset class="form-group">\
+                  <input class="form-control form-control-lg" type="text" placeholder="Your Name" coral-on-input>\
+                </fieldset>'}
+                <fieldset class="form-group">
+                  <input class="form-control form-control-lg" type="text" placeholder="Email">
+                </fieldset>
+                <fieldset class="form-group">
+                  <input class="form-control form-control-lg" type="password" placeholder="Password">
+                </fieldset>
+                <button class="btn btn-lg btn-primary pull-xs-right" onclick="console.log">
+                  ${d.page==='login' ? 'Sign in' : 'Sign up'}
+                </button>
+              </form>
+            </div>
+        </script>
+        </div>
       </div>
-
     </div>
   </div>
 </div>

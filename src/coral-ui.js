@@ -284,8 +284,8 @@ function UIFactory (opts) {
     localSetup = localSetup || {}
     var rf = this
     var _ = this.__ = {}
-    cif(_, ['update', 'update', 'bind'], setup, localSetup)
-    cif(this, ['methods', 'observers', 'listeners', 'mutate', 'lifecycle'], setup, localSetup) // intentional shallow copies
+    cif(_, ['update', 'bind'], setup, localSetup)
+    cif(this, ['methods', 'observers', 'listeners', 'data', 'mutate', 'lifecycle'], setup, localSetup) // intentional shallow copies
     if ('shared' in setup) this.shared = setup.shared
     if (setup.events || localSetup.events) _.events = xs.assign({}, arrtoobj(setup.events), localSetup.events)
     if (setup.decorators || localSetup.decorators) _.decorators = xs.assign({}, arrtoobj(setup.decorators), arrtoobj(localSetup.decorators))
@@ -367,7 +367,7 @@ function UIFactory (opts) {
   UI.prototype.decorate = function (k, set) { var _d = alwaysobj(this, 'decorators'); _d[k] = (set !== false && set !== 0) }
   UI.prototype.events = function (k, set) { var _e = alwaysobj(this.__, 'events'); _e[k] = (set !== false && set !== 0 && set); this.__.evrx = null }
   UI.prototype.watch = function (k, o) { this.state[k] = o; this.state.__observe__() }
-  UI.prototype.bind = function (k, sel, copyk, ctx) { doDataBind(this, k, sel, copyk, ctx) }
+  UI.prototype.bind = function (k, sel, copyk, ctx) { doDataBind(this, k, sel, copyk, ctx, true) }
   UI.prototype.emit = function (ev, detail) { emit(this.rootEl, ev, detail) }
   function loadData (datapath, url, opts) { // this must be UI
     var rf = this
@@ -385,7 +385,8 @@ function UIFactory (opts) {
       } else if (this.status) xhr.onerror(ev)
     }
     xhr.open(opts.method || 'GET', url, true)
-    xhr.send(null)
+    var b = opts.body
+    xhr.send(b ? (typeof (b) === 'string' ? '' : JSON.stringify(b)) : null)
     return xhr
   }
   function loadHTML (datapath, url) { // this must be UI
@@ -436,14 +437,14 @@ function UIFactory (opts) {
     }
     return null
   }
-  function doDataBind (rf, proppath, sel, copyprop, selctx) {
+  function doDataBind (rf, proppath, sel, copyprop, selctx, force) {
     var refobj, sp
     sel = sel || '^'
     var _ = rf.__
     var _b = alwaysobj(_, 'bind')
     var _bp = alwaysobj(_b, proppath)
     copyprop = copyprop || proppath
-    if (_bp.proppath === proppath && _bp.selector === sel && _bp.prop === copyprop && !_bp.copy) return
+    if (!force && _bp.proppath === proppath && _bp.selector === sel && _bp.prop === copyprop && !_bp.copy) return
     switch (sel[0]) {
       case '^':
         refobj = findParentCoral(rf, sel.substring(1) | 0)
@@ -460,12 +461,15 @@ function UIFactory (opts) {
         break
       default:
         var els = sel.split('$')
+        var meth = els[1].split(':')
+        els[1] = meth[0]; meth = meth[1]
+
         _b[proppath] = { proppath: proppath, selector: sel, prop: copyprop }
         switch (els[1]) {
           case 'data':
           case 'html':
-          case 'json-raw': loadData.call(rf, proppath, els[2]); break
-          case 'json': loadData.call(rf, proppath, els[2], { sanitize: true }); break
+          case 'json-raw': loadData.call(rf, proppath, els[2], { method: meth, body: selctx }); break
+          case 'json': loadData.call(rf, proppath, els[2], { method: meth, body: selctx, sanitize: true }); break
           case 'jsonp': els[2] = jsonp(els[2], rf, proppath) // fall through
           case 'js': loadHTML.call(rf, proppath, els[2]); break
           default:
@@ -507,7 +511,7 @@ function UIFactory (opts) {
   }
   function render () {
     publishLF(this, 'beforeRender')
-    //var t = new Date()
+    // var t = new Date()
     var rel = this.rootEl
     if (looseNode(rel)) { this.unmount(); return }
     var update = this.__.update
@@ -527,7 +531,7 @@ function UIFactory (opts) {
         }
         run(rel) // hydrate nested components
       }
-      //if (rel.parentNode.classList.contains('container')) { console.log('render', new Date() - t) }
+      // if (rel.parentNode.classList.contains('container')) { console.log('render', new Date() - t) }
     }
     publishLF(this, 'afterRender')
   }

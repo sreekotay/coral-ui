@@ -5,7 +5,7 @@
 coral.ui.register('*article', {
   state: {
     datasrc: 'state.articledata.article',
-    articledata: { article: { title: '&nbsp;test', author: { username: '&nbsp;', image: ' ' }, body: ' ', favoritesCount: 0 } },
+    articledata: { article: { title: '&nbsp;', author: { username: '&nbsp;', image: ' ' }, body: ' ', favoritesCount: 0 } },
     commentsdata: null,
     taglist: null
   },
@@ -35,9 +35,10 @@ coral.ui.register('*article-comments', {
 })
 
 if (!window.marked) window.marked = function (s) { return s }
+function domarkdown (s) { console.log(s); return marked(s.replace(/\\\&lt\;/g, '&lt;')) }
 coral.ui.loadScript('https://cdn.jsdelivr.net/npm/marked/marked.min.js',
 
-/*
+  /*
 if (!window.markdown) window.markdown = function (s) { return s }
 coral.ui.loadScript('https://cdnjs.cloudflare.com/ajax/libs/markdown-it/11.0.0/markdown-it.min.js',
 */
@@ -84,7 +85,7 @@ coral.ui.clientSideInclude(function (d) { /*
     <div class="row article-content">
       <div class='col-xs-12'>
       <div>
-      ${marked (d.body)}
+      ${domarkdown (d.body)}
       </div>
       <div coral class="tag-list" coral-s-datasrc="state.taglist" coral-s-taglist="~~[coral=article]" >
         <script type='coral-template(d)'>
