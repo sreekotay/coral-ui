@@ -37,6 +37,14 @@
 [coral=typer].coral-stuck {
   border-bottom: 1px solid #f0f0f0;
 }
+[coral-slot=header] {
+  transition: font-size 0.5s;
+}
+[coral-slot=header].coral-stuck {
+  font-size:300%;
+  background-color:rgba(255,255,255,0.8);
+  border-bottom: 1px solid #ccc;
+}
 </style>
 <div class='cui-vertical' style='width:100%; align-items:center; padding-top: 16px;'>
   <div style='background-color:red; height:100px; width: 40px'></div>
@@ -62,7 +70,7 @@
           ["item1"], ["item2"], ["third item"], [ "Darth Vader"], ["me"], ["you"]
           ]        
         </script>
-        <div coral-slot='header' ><b class='coral-sticky'>TODO.</b></div>
+        <div coral-slot='header' class='coral-sticky'><b >TODO.</b></div>
         <div coral-slot='footer'><div id='b'>Done footer.</div></div>
       </div>
       <div style='flex-grow:1'></div> 

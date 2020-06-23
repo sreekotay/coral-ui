@@ -16,9 +16,9 @@ coral.ui.register('*article', {
     articledata: function () {
       if (this.state.articledata) this.state.taglist = this.state.articledata.article.tagList
     },
-    resource: function (updates) { 
+    resource: function (updates) {
       if (updates.value) {
-        this.bind('state.articledata', '$json$' + baseurl + '/articles/' + this.state.resource) 
+        this.bind('state.articledata', '$json$' + baseurl + '/articles/' + this.state.resource)
         this.bind('state.commentsdata', '$json$' + baseurl + '/articles/' + this.state.resource + '/comments')
       }
     }
@@ -27,19 +27,27 @@ coral.ui.register('*article', {
 
 coral.ui.register('*article-comments', {
   state: {
-    datasrc: 'state.commentsdata.comments',
+    datasrc: 'state.commentsdata.comments'
   },
   bind: {
     commentsdata: { selector: '[coral=article]' } //  same as: coral-s-tag="~~[coral=switcher]"
   }
 })
 
-if (!window.marked) window.marked = function(s) { return s }
-coral.ui.loadScript('https://cdn.jsdelivr.net/npm/marked/marked.min.js', function () {
-  console.log ('marked')
-  var ui = coral.ui.find('[coral=article]')
-  if (ui) ui.render() // let's us load in parallel
-})
+if (!window.marked) window.marked = function (s) { return s }
+coral.ui.loadScript('https://cdn.jsdelivr.net/npm/marked/marked.min.js',
+
+/*
+if (!window.markdown) window.markdown = function (s) { return s }
+coral.ui.loadScript('https://cdnjs.cloudflare.com/ajax/libs/markdown-it/11.0.0/markdown-it.min.js',
+*/
+  function (alreadyLoaded) {
+    if (alreadyLoaded) return
+    console.log('marked')
+    if (window.markdownit) { var md = new markdownit(); window.marked = function (s) { return md.render(s) } }
+    var ui = coral.ui.find('[coral=article]')
+    if (ui) ui.render() // let's us load in parallel
+  })
 coral.ui.clientSideInclude(function (d) { /*
 <div class="article-page" coral=article>
   <script type=coral-template(d)>
@@ -76,7 +84,7 @@ coral.ui.clientSideInclude(function (d) { /*
     <div class="row article-content">
       <div class='col-xs-12'>
       <div>
-      ${marked(d.body)}
+      ${marked (d.body)}
       </div>
       <div coral class="tag-list" coral-s-datasrc="state.taglist" coral-s-taglist="~~[coral=article]" >
         <script type='coral-template(d)'>

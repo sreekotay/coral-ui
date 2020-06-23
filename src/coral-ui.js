@@ -484,10 +484,9 @@ function UIFactory (opts) {
 
     var f = function (u) { if (looseNode(rf.rootEl)) { rf.unmount(); return } rf.react(u) }
     if (dp.obj !== refobj.state) {
-      _b.proppath
       xs.observe(refobj.state, function (updates) {
         // to handldle the nested case
-        if (_b[proppath].copy) return
+        if (_b[proppath].copy || looseNode(rf.rootEl)) return
         if (updates.action == 'set' && copyprop.indexOf(updates.path) === 6) { // 6 = "state."
           _b[proppath].copy = true
           doDataBind(rf, proppath, sel, copyprop, selctx)
@@ -511,7 +510,6 @@ function UIFactory (opts) {
     var t = new Date()
     var rel = this.rootEl
     if (looseNode(rel)) { this.unmount(); return }
-    if (!rel.parentNode) { return }
     var update = this.__.update
     if (update) {
       var fc = this.__.fcounter
@@ -529,7 +527,6 @@ function UIFactory (opts) {
         }
         run(rel) // hydrate nested components
       }
-      if (!rel.parentNode) { return }
       if (rel.parentNode.classList.contains('container')) { console.log('render', new Date() - t) }
     }
     publishLF(this, 'afterRender')
@@ -906,11 +903,11 @@ window.coral.ui = UIFactory({ autorun: true })
 ;(function () {
   var coral = window.coral = window.coral || {}; coral.ui = coral.ui || {}
   coral.ui.loadScript = function (url, cb) {
-    if (document.querySelector('script[url="' + (url) + '"]')) { if (cb) cb(); return }
+    if (document.querySelector('script[url="' + (url) + '"]')) { if (cb) cb(true); return }
     var s = document.createElement('script')
     s.src = url
     s.setAttribute('url', url)
-    s.onload = cb
+    s.onload = function () { cb(false) }
     document.getElementsByTagName('head')[0].appendChild(s)
     // setTimeout (()=>document.getElementsByTagName('head')[0].appendChild(s), 200000)
   }
