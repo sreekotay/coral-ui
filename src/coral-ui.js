@@ -426,7 +426,7 @@ function UIFactory (opts) {
     }
     return str.replace('{JSONP}', fname)
   }
-  function looseNode(el) {var r = el && el.getRootNode(); return r && r!==document && r.nodeName!=='#document-fragment'}
+  function looseNode (el) { var r = el && el.getRootNode(); return r && r !== document && r.nodeName !== '#document-fragment' }
   function findParentCoral (rf, count) {
     var el = rf && rf.rootEl
     while (rf && el) {
@@ -443,7 +443,7 @@ function UIFactory (opts) {
     var _b = alwaysobj(_, 'bind')
     var _bp = alwaysobj(_b, proppath)
     copyprop = copyprop || proppath
-    if (_bp.proppath === proppath && _bp.selector === sel && _bp.prop === copyprop) return
+    if (_bp.proppath === proppath && _bp.selector === sel && _bp.prop === copyprop && !_bp.copy) return
     switch (sel[0]) {
       case '^':
         refobj = findParentCoral(rf, sel.substring(1) | 0)
@@ -480,12 +480,20 @@ function UIFactory (opts) {
     // /var dp = dot(rf, proppath)
     var dp = realizeSource(rf, proppath)
     if (!dp.obj) coralError('state bind not found: ' + proppath)
-    var f = function (u) {
-      if (looseNode(rf.rootEl)) {
-        rf.unmount()
-        return
-      }
-      rf.react(u)
+    if (_bp.copy) { dp.obj[dp.prop] = sp.obj[sp.prop]; return }
+
+    var f = function (u) { if (looseNode(rf.rootEl)) { rf.unmount(); return } rf.react(u) }
+    if (dp.obj !== refobj.state) {
+      _b.proppath
+      xs.observe(refobj.state, function (updates) {
+        // to handldle the nested case
+        if (_b[proppath].copy) return
+        if (updates.action == 'set' && copyprop.indexOf(updates.path) === 6) { // 6 = "state."
+          _b[proppath].copy = true
+          doDataBind(rf, proppath, sel, copyprop, selctx)
+          _b[proppath].copy = false
+        }
+      })
     }
     var obsf = xs.alias(dp.obj, dp.prop, sp.obj, sp.prop, f)
     _b[proppath] = { proppath: proppath, selector: sel, prop: copyprop, sp: sp, unobs: obsf }
@@ -502,12 +510,8 @@ function UIFactory (opts) {
     publishLF(this, 'beforeRender')
     var t = new Date()
     var rel = this.rootEl
-    if (looseNode(rel)) {
-      this.unmount()
-      return
-    }
-    if (!rel.parentNode)
-      return
+    if (looseNode(rel)) { this.unmount(); return }
+    if (!rel.parentNode) { return }
     var update = this.__.update
     if (update) {
       var fc = this.__.fcounter
@@ -523,10 +527,9 @@ function UIFactory (opts) {
           if (Array.isArray(res)) res.forEach(function (e) { rel.appendChild(e) })
           else rel.appendChild(res)
         }
-        run(rel) // hydrate nested components 
+        run(rel) // hydrate nested components
       }
-      if (!rel.parentNode)
-        return
+      if (!rel.parentNode) { return }
       if (rel.parentNode.classList.contains('container')) { console.log('render', new Date() - t) }
     }
     publishLF(this, 'afterRender')
@@ -603,8 +606,7 @@ function UIFactory (opts) {
   }
   function mergeNode (c, n) {
     if (!c) return n
-    if (!n)
-      return n;
+    if (!n) { return n }
     c.coral = n.coral
     if (c.coral) c.coral.rootEl = c
     if (c.nodeType === 3 && n.nodeType === 3) {
@@ -679,7 +681,7 @@ function UIFactory (opts) {
     if (ha.html) {
       // root.innerHTML = ha.html; run(root); return
       div = hydrate(root, ha.html)
-      run(div) // hydrate nested components 
+      run(div) // hydrate nested components
       ha.html = ''
     }
 
@@ -695,7 +697,7 @@ function UIFactory (opts) {
         if (n !== c) {
           hc.el = c = n
           cnt++
-        } 
+        }
       } else if (h) {
         if (/* 0 && */i >= root.childNodes.length) hta += h
         else hc.el = c = hydrate(root, h).firstChild
@@ -719,7 +721,7 @@ function UIFactory (opts) {
 
     var rcl = root.childNodes.length
     if (hta) {
-      run(root) // hydrate nested components 
+      run(root) // hydrate nested components
       root.insertAdjacentHTML('beforeend', hta) // end insert
     }
     root = getAttachPoint(this.rootEl)
@@ -910,7 +912,7 @@ window.coral.ui = UIFactory({ autorun: true })
     s.setAttribute('url', url)
     s.onload = cb
     document.getElementsByTagName('head')[0].appendChild(s)
-    //setTimeout (()=>document.getElementsByTagName('head')[0].appendChild(s), 200000)
+    // setTimeout (()=>document.getElementsByTagName('head')[0].appendChild(s), 200000)
   }
   coral.ui.clientSideInclude = function (data) {
     function isfunction (obj) { return !!(obj && obj.constructor && obj.call && obj.apply) }

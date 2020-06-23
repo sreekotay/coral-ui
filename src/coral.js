@@ -229,3 +229,110 @@
     sheet.insertRule(name + '{' + rules + '}', 0)
   }
 })()
+
+  /*
+  function hcopy (c, n) {
+    c.tag = n.tag
+    c.d = n.d
+    c.c = n.c
+    c.el = n.el
+  }
+  function hcopyAttributes (c, n) {
+    try {
+      var ca = c.a
+      var na = n.a
+      for (var a in na) {
+        if (ca[a] !== na[a]) {
+          if (rf_tagvalue[c.nodeName] && a === 'value') {
+            c.value = na[a]
+          }
+          ca[a] = na[a]
+          c.el.setAttribute(a, ca[a])
+        }
+      }
+      for (a in ca) {
+        if (!(a in na)) {
+          delete ca[a]
+          c.el.removeAttribute(a)
+        }
+      }
+      return true
+    } catch (err) {
+      console.error(err)
+    }
+    return false
+  }
+  function hmergeAttempt (c, n) {
+    if (!c.tag && !n.tag) {
+      if (c.d !== n.d) {
+        c.d = n.d
+        c.el.nodeValue = n.el.nodeValue
+      }
+      return true
+    }
+    if (c.tag !== n.tag || !hcopyAttributes(c, n)) {
+      return false
+    }
+
+    // copy attributes
+    if (!c.el || !n.el) { debugger}
+
+    if ((c.c && c.c.length) || (n.c && n.c.length)) {
+      var i
+      var cc = (c.c && c.c[0] && c.c) || []; var cce = c.el.childNodes
+      var nc = (n.c && n.c[0] && n.c) || []; var nce = n.el.childNodes
+      var il = i = Math.min(cc.length, nc.length)
+      while (il < cce.length) c.el.removeChild(cce[i])
+      while (il < nce.length) c.el.appendChild(nce[i])
+      c.c.length = n.c.length
+      while (--i >= 0) {
+        var ccn = cc[i]; ccn.el = cce[i]
+        var ncn = nc[i]; ncn.el = nce[i]
+        if (!ccn.tag && !ncn.tag) { if (ccn.d !== ncn.d) { ccn.d = ncn.d; ccn.el.nodeValue = ncn.el.nodeValue } continue }
+        if (ccn.tag !== ncn.tag || !hmergeAttempt(ccn, ncn)) {
+          c.el.replaceChild(ncn.el, ccn.el)
+          hcopy(ccn, ncn)
+        }
+      }
+    }
+    return true
+  }
+
+  function hmerge (c, n) {
+    if (c.tag !== n.tag || !hmergeAttempt(c, n)) {
+      c.el.parentNode.replaceChild(n.el, c.el)
+      hcopy(c, n)
+      return n
+    }
+    return c
+  }
+  function HTAG (t, data) {
+    var p = HTAG.prototype
+    this.tag = t
+    this.a = p.a
+    this.c = p.c
+    this.d = data
+  }
+  HTAG.prototype.a = function (o) {
+    this.a = o; this.a[0] = true; return this
+  }
+  HTAG.prototype.c = function (c) {
+    this.c = c; return this
+  }
+  HTAG.prototype.html = function () {
+    if (!this.tag) return this.d
+    var a = this.a; var attrs = ''
+    if (a && a[0]) {
+      for (var k in a) {
+        if (k !== '0') { attrs += ' ' + k + '="' + a[k].replace(/"/, '\\"') + '"' }
+      }
+    }
+    var c = this.c; var chtml = ''
+    if (c && c[0]) for (var i = 0; i < c.length; i++) chtml += c[i].html()
+    return '<' + this.tag + attrs + '>' + chtml +
+           '</' + this.tag + '>'
+  }
+
+  UI.prototype.htag = function (t) { return new HTAG(t) }
+  UI.prototype.hdata = function (d) { return new HTAG(false, d) }
+*/

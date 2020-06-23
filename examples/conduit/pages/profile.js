@@ -40,7 +40,7 @@ coral.ui.clientSideInclude (function () {/*
       <div coral class="col-xs-12 col-md-10 offset-md-1"
         coral-s-resource="~~[coral=switcher]"
         coral-s-modifier="~~[coral=switcher]"
-        coral-s-author="~state.profiledata~#profile"
+        coral-s-author="~state.profiledata.profile~#profile"
         coral-s-articledata
         coral-s-datasrc="state.articledata.articles"
         >
@@ -49,10 +49,10 @@ coral.ui.clientSideInclude (function () {/*
           <div class="articles-toggle">
             <ul class="nav nav-pills outline-active">
               <li class="nav-item">
-                <a class="nav-link ${d.state.modifier?'':'active'}" href="#/profile/${(d.state.author||{}).profile.username}">My Articles</a>
+                <a class="nav-link ${d.state.modifier?'':'active'}" href="#/profile/${d.state.author.username}">My Articles</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link ${d.state.modifier?'active':''}" href="#/profile/${(d.state.author||{}).profile.username}/favorites">Favorited Articles</a>
+                <a class="nav-link ${d.state.modifier?'active':''}" href="#/profile/${d.state.author.username}/favorites">Favorited Articles</a>
               </li>
             </ul>
           </div>
