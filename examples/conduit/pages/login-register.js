@@ -7,6 +7,7 @@ coral.ui.register('*login', {
   },
   observers: {
     userdata: function (updates) {
+      enableInputs(true)
       if (updates.value) {
         window.location.href = '#'
       }
@@ -14,6 +15,7 @@ coral.ui.register('*login', {
   },
   listeners: {
     coralLoadDataFail: function (event) {
+      enableInputs(true)
       this.state.errorMessage = '<li>Error. Please correct and try again.</li>'
       try {
         var err = JSON.parse(event.detail.xhr.response)
@@ -28,6 +30,7 @@ coral.ui.register('*login', {
       this.data[event.target.getAttribute('placeholder')] = event.target.value
     },
     submit: function (event) {
+      enableInputs(false)
       var endpoint = this.state.page === 'login' ? '/users/login' : '/users'
       this.bind('state.userdata', '$json$' + baseurl + endpoint, undefined, {
         method: 'POST',

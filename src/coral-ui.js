@@ -403,7 +403,7 @@ function UIFactory (opts) {
       script = document.getElementsByTagName('script')
       script = script[script.length - 1]
     }
-    script.onerror = function (err) { console.log('CORAL SCRIPT LOAD', err); script.parentNode.removeChild(script); emit(rf.rootEl, 'coralLoadHTMLFail', { url: url, xhr: xhr, err: err }) }
+    script.onerror = function (err) { console.log('CORAL SCRIPT LOAD', err); script.parentNode.removeChild(script); emit(rf.rootEl, 'coralLoadHTMLFail', { url: url, script: script, err: err }) }
     script.coralCB = function (data) { rf.dot(datapath, data) }
     if (!document.currentScript) window.rf_script = script
     return script

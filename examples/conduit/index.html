@@ -62,8 +62,11 @@
   function authorization() {
     var ui = coral.ui.find('[coral=header')
     var token =  ui && ui.state.userdata && ui.state.userdata.user.token
-    return token ? {Authorization: 'Token ' + token} : {}
-      
+    return token ? {Authorization: 'Token ' + token} : {}   
+  }
+  function enableInputs(enable) {
+    var e = document.querySelectorAll('input'); for (var i=0; i<e.length; i++) e[i].disabled=!enable
+    var e = document.querySelectorAll('textarea'); for (var i=0; i<e.length; i++) e[i].disabled=!enable
   }
 
   // ============================

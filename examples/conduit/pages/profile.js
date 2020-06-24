@@ -2,7 +2,7 @@ function loadProfileArticles (updates) {
   var u = this.state.userdata
   if (this.state.modifier == 'favorites') this.bind('state.articledata', '$json$' + baseurl + '/articles/?favorited=' + this.state.resource)
   else this.bind('state.articledata', '$json$' + baseurl + '/articles/?author=' + this.state.resource, null)
-  this.slots.empty.text = 'No Articles Yet.'
+  this.slots.empty.text = '<div class="article-preview">No Articles here.... Yet.</div>'
 }
 coral.ui.clientSideInclude(function () { /*
 <div class="profile-page">

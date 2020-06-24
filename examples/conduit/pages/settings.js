@@ -16,14 +16,20 @@ coral.ui.register('*settings', {
   observers: {
     updateduser: function(updates) {
       if (updates.value) {
+        enableInputs(true)
         this.state.userdata = this.state.updateduser
         window.location.href = '#/profile/' + this.state.userdata.user.username
       }
     }
   },
   listeners: {
-    input: function (event) {this.data.form[event.target.placeholder] = event.target.value},
+    coralLoadDataFail: function (event) {
+      enableInputs(true)
+      alert ('crap - some error.  better messaging in the works')
+    },
+      input: function (event) {this.data.form[event.target.placeholder] = event.target.value},
     submit: function (event) {
+      enableInputs(false)
       var fd = this.data.form
       var u = this.state.userdata.user
       this.bind('state.updateduser', '$json$' + baseurl + '/user', undefined, {
@@ -76,7 +82,7 @@ coral.ui.clientSideInclude(function () { /*
           </script>
         </form>
         <hr>
-        <button class="btn btn-outline-danger" onclick='logout()'>Or click here to logout.</button>
+        <button class="btn btn-outline-danger" style='width:100%' onclick='logout()'>Or click here to logout.</button>
       </div>
 
     </div>
