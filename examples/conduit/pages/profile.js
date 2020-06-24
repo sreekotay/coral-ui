@@ -8,11 +8,13 @@ coral.ui.clientSideInclude (function () {/*
   <div class="user-info">
     <div class="container">
       <div coral class="row" id='profile'
+            coral-s-page="~~[coral=switcher]"
             coral-s-resource="~~[coral=switcher]"
             coral-s-profiledata='{"profile":{"username":"&nbsp;", "image":" ", "bio":"&nbsp;"}}'
             coral-s-datasrc="state.profiledata.profile"
         >
           <script type="coral-observer(updates)" name="resource">
+          if (this.state.page!=='profile') return
           this.bind('state.profiledata', '$json$' + baseurl + '/profiles/' + this.state.resource)
         </script>
 

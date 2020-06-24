@@ -10,6 +10,7 @@ coral.ui.register('*article', {
     taglist: null
   },
   bind: {
+    page: { selector: '[coral=switcher]' }, //  same as: coral-s-page="~~[coral=switcher]"
     resource: { selector: '[coral=switcher]' } //  same as: coral-s-resource="~~[coral=switcher]"
   },
   observers: {
@@ -17,7 +18,7 @@ coral.ui.register('*article', {
       if (this.state.articledata) this.state.taglist = this.state.articledata.article.tagList
     },
     resource: function (updates) {
-      if (updates.value) {
+      if (updates.value && this.state.page==='article') {
         this.bind('state.articledata', '$json$' + baseurl + '/articles/' + this.state.resource)
         this.bind('state.commentsdata', '$json$' + baseurl + '/articles/' + this.state.resource + '/comments')
       }
@@ -59,9 +60,9 @@ coral.ui.clientSideInclude(function (d) { /*
       <h1>${d.title}</h1>
 
       <div class="article-meta">
-        <a href=""><img src="${d.author.image}" /></a>
+        <a href="#/profile/${d.author.username}"><img src="${d.author.image}" /></a>
         <div class="info">
-          <a href="" class="author">${d.author.username}</a>
+          <a href="#/profile/${d.author.username}" class="author">${d.author.username}</a>
           <span class="date">${fdate(d.createdAt)}</span>
         </div>
         <button class="btn btn-sm btn-outline-secondary">

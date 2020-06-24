@@ -9,27 +9,30 @@ coral.ui.register('*articlesList', {
     tagsdata: null
   },
   bind: {
+    page: { selector: '[coral=switcher]' }, //  same as: coral-s-page="~~[coral=switcher]"
     tag: { selector: '[coral=switcher]' } //  same as: coral-s-tag="~~[coral=switcher]"
   },
-  mutate: function (updates) {
-    var url = baseurl + '/articles?'
-    var tag = this.state.tag; if (tag) url += '&tag=' + tag
-    this.bind('state.articlesdata', '$json$' + url)
-    var list = coral.ui.find ('.nav-pills')
-    if (list) {
-      if (!tag) {
-        list.state.links[1].state = 'active'
-        if (list.state.links.length>2) list.state.links[2].state = ''
-      } else {
-        list.state.links[1].state = ''
-        list.state.links.length = 2
-        list.state.links.push ({label:'# ' + tag, state:'active', href:'#?tag='+tag})
-      }
-    }
-  },
   observers: {
-    'tagsdata': function (updates) {
-      this.bind('state.tagsdata', '$json$' + baseurl + '/tags')
+    'tag': function () {
+      if (this.state.page!=='home') return
+      var url = baseurl + '/articles?'
+      var tag = this.state.tag; if (tag) url += '&tag=' + tag
+      this.bind('state.articlesdata', '$json$' + url) 
+      if (!this.tagsdata) {
+        this.tagsdata = {}
+        this.bind('state.tagsdata', '$json$' + baseurl + '/tags')
+      }
+      var list = coral.ui.find ('.nav-pills')
+      if (list) {
+        if (!tag) {
+          list.state.links[1].state = 'active'
+          if (list.state.links.length>2) list.state.links[2].state = ''
+        } else {
+          list.state.links[1].state = ''
+          list.state.links.length = 2
+          list.state.links.push ({label:'# ' + tag, state:'active', href:'#?tag='+tag})
+        }
+      }
     }
   }
 })

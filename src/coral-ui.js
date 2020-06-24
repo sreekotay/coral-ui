@@ -178,7 +178,7 @@ function UIFactory (opts) {
       var rl = coral.listeners
       for (var k in rl) {
         al.push(k)
-        var ev = k.split('.')
+        var ev = k.split('.') 
         var e = ev[0]
         if (!rf_listeners[e]) { // we only need to add it once
           rf_listeners[e] = listenerFactory(e)
@@ -358,7 +358,7 @@ function UIFactory (opts) {
 
     var mstatus
     if (updates.value === updates.prev) return
-    if (this.mutate) mstatus = this.mutate(this, updates)
+    if (this.mutate) mstatus = this.mutate.call(this, updates)
     var _d = _.decorators
     if (!this.sym) return // we are still constructing
     if (status !== 'done' && mstatus !== 'done' && (!_d || (!_d[p] && !_d[mp]))) this.rerender() // re-render
@@ -368,6 +368,7 @@ function UIFactory (opts) {
   UI.prototype.events = function (k, set) { var _e = alwaysobj(this.__, 'events'); _e[k] = (set !== false && set !== 0 && set); this.__.evrx = null }
   UI.prototype.watch = function (k, o) { this.state[k] = o; this.state.__observe__() }
   UI.prototype.bind = function (k, sel, copyk, ctx) { doDataBind(this, k, sel, copyk, ctx, true) }
+  UI.prototype.bindForce = function (k, sel, copyk, ctx) { doDataBind(this, k, sel, copyk, ctx, true) }
   UI.prototype.emit = function (ev, detail) { emit(this.rootEl, ev, detail) }
   function loadData (datapath, url, opts) { // this must be UI
     var rf = this
@@ -386,6 +387,7 @@ function UIFactory (opts) {
     }
     xhr.open(opts.method || 'GET', url, true)
     var b = opts.body
+    for (var h in (opts.headers||{})) xhr.setRequestHeader (h, opts.headers[h])
     xhr.send(b ? (typeof (b) === 'string' ? '' : JSON.stringify(b)) : null)
     return xhr
   }
@@ -461,15 +463,12 @@ function UIFactory (opts) {
         break
       default:
         var els = sel.split('$')
-        var meth = els[1].split(':')
-        els[1] = meth[0]; meth = meth[1]
-
         _b[proppath] = { proppath: proppath, selector: sel, prop: copyprop }
         switch (els[1]) {
           case 'data':
           case 'html':
-          case 'json-raw': loadData.call(rf, proppath, els[2], { method: meth, body: selctx }); break
-          case 'json': loadData.call(rf, proppath, els[2], { method: meth, body: selctx, sanitize: true }); break
+          case 'json-raw': loadData.call(rf, proppath, els[2], selctx); break
+          case 'json': loadData.call(rf, proppath, els[2], xs.assign({ sanitize: true }, selctx || {})); break
           case 'jsonp': els[2] = jsonp(els[2], rf, proppath) // fall through
           case 'js': loadHTML.call(rf, proppath, els[2]); break
           default:

@@ -4,16 +4,27 @@ coral.ui.register('*login', {
   bind: {
     page: { selector: '[coral=switcher]' }
   },
+  observers: {
+    userdata: function (updates) {
+      localStorage.setItem('creds', JSON.stringify(updates.value))
+    }
+  },
   listeners: {
     input: function (event) {
       this.data[event.target.getAttribute('placeholder')] = event.target.value
     },
     submit: function (event) {
-      if (this.state.page==='login') {
-        this.bind('state.userdata', '$json:POST$' + baseurl + '/users/login', undefined, {
-          user: {
-            email: this.data['Email'],
-            password: this.data['Password']
+      if (this.state.page === 'login') {
+        this.bindForce('state.userdata', '$json$' + baseurl + '/users/login', undefined, {
+          method:'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: {
+            user: {
+              email: this.data['Email'],
+              password: this.data['Password']
+            }
           }
         })
       }
@@ -32,7 +43,10 @@ coral.ui.clientSideInclude(function () { /*
         <script type='coral-template(d)'>
           <div>
             <h1 class="text-xs-center"> ${d.page==='login' ? 'Sign in' : 'Sign up'}</h1>
-            ${d.page==='login'?'':'\
+            ${d.page==='login'?'\
+              <p class="text-xs-center">\
+                <a href="#/register">Need an account?</a>\
+              </p>':'\
               <p class="text-xs-center">\
                 <a href="#/login">Have an account?</a>\
               </p>'}
