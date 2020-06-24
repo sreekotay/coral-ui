@@ -35,21 +35,7 @@ coral.ui.register('*article-comments', {
   }
 })
 
-if (!window.marked) window.marked = function (s) { return s }
-function domarkdown (s) { console.log(s); return marked(s.replace(/\\\&lt\;/g, '&lt;')) }
-coral.ui.loadScript('https://cdn.jsdelivr.net/npm/marked/marked.min.js',
-
-  /*
-if (!window.markdown) window.markdown = function (s) { return s }
-coral.ui.loadScript('https://cdnjs.cloudflare.com/ajax/libs/markdown-it/11.0.0/markdown-it.min.js',
-*/
-  function (alreadyLoaded) {
-    if (alreadyLoaded) return
-    console.log('marked')
-    if (window.markdownit) { var md = new markdownit(); window.marked = function (s) { return md.render(s) } }
-    var ui = coral.ui.find('[coral=article]')
-    if (ui) ui.render() // let's us load in parallel
-  })
+loadMarkDown('[coral=article]')
 coral.ui.clientSideInclude(function (d) { /*
 <div class="article-page" coral=article>
   <script type=coral-template(d)>

@@ -1,5 +1,5 @@
 coral.ui.register('*login', {
-  state: ['page'],
+  state: ['page', 'errorMessage'],
   data: { },
   bind: {
     page: { selector: '[coral=switcher]' },
@@ -7,30 +7,42 @@ coral.ui.register('*login', {
   },
   observers: {
     userdata: function (updates) {
-      localStorage.setItem('creds', JSON.stringify(updates.value))
+      if (updates.value) {
+        window.location.href = '#'
+      }
     }
   },
   listeners: {
+    coralLoadDataFail: function (event) {
+      this.state.errorMessage = '<li>Error. Please correct and try again.</li>'
+      try {
+        var err = JSON.parse(event.detail.xhr.response)
+        if (err.errors) {
+          var msg = '' 
+          for (var k in err.errors) msg += k + ' ' + err.errors[k]
+          this.state.errorMessage = msg
+        }
+      } catch (err) {}
+    },
     input: function (event) {
       this.data[event.target.getAttribute('placeholder')] = event.target.value
     },
     submit: function (event) {
-      if (this.state.page === 'login') {
-        this.bindForce('state.userdata', '$json$' + baseurl + '/users/login', undefined, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: {
-            user: {
-              email: this.data['Email'],
-              password: this.data['Password']
-            }
+      var endpoint = this.state.page === 'login' ? '/users/login' : '/users'
+      this.bind('state.userdata', '$json$' + baseurl + endpoint, undefined, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: {
+          user: {
+            email: this.data['Email'],
+            password: this.data['Password'],
+            username: this.data['Your Name']
           }
-        })
-      }
+        }
+      })
     }
-
   }
 })
 
@@ -52,25 +64,26 @@ coral.ui.clientSideInclude(function () { /*
                 <a href="#/login">Have an account?</a>\
               </p>'}
             <div>
-              ${d.emailtaken?'\
-                <ul class="error-messages">\
-                  <li>That email is already taken</li>\
-                </ul>':''}
+              ${d.errorMessage?'\
+                <ul class="error-messages">'
+                  + d.errorMessage +
+                '</ul>':''}
 
               <form onsubmit='event.preventDefault();' coral-on-submit>
                 ${d.page==='login' ? '' : '\
                 <fieldset class="form-group">\
-                  <input class="form-control form-control-lg" type="text" placeholder="Your Name" coral-on-input>\
+                  <input class="form-control form-control-lg" type="text" placeholder="Your Name" autocomplete="username" coral-on-input>\
                 </fieldset>'}
                 <fieldset class="form-group">
-                  <input class="form-control form-control-lg" type="text" placeholder="Email">
+                  <input class="form-control form-control-lg" type="text" placeholder="Email" autocomplete="email">
                 </fieldset>
                 <fieldset class="form-group">
-                  <input class="form-control form-control-lg" type="password" placeholder="Password">
+                  <input class="form-control form-control-lg" type="password" placeholder="Password" autocomplete="current-password">
                 </fieldset>
-                <button class="btn btn-lg btn-primary pull-xs-right" onclick="console.log">
+                <button class="btn btn-lg btn-primary pull-xs-right" >
                   ${d.page==='login' ? 'Sign in' : 'Sign up'}
                 </button>
+
               </form>
             </div>
         </script>

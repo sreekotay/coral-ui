@@ -1,8 +1,10 @@
-function loadProfileArticles(updates) {
-  if (this.state.modifier=='favorites') this.bind('state.articledata', '$json$' + baseurl + '/articles/?favorited=' + this.state.resource)
-  else this.bind('state.articledata', '$json$' + baseurl + '/articles/?author=' + this.state.resource)
+function loadProfileArticles (updates) {
+  var u = this.state.userdata
+  if (this.state.modifier == 'favorites') this.bind('state.articledata', '$json$' + baseurl + '/articles/?favorited=' + this.state.resource)
+  else this.bind('state.articledata', '$json$' + baseurl + '/articles/?author=' + this.state.resource, null)
+  this.slots.empty.text = 'No Articles Yet.'
 }
-coral.ui.clientSideInclude (function () {/*
+coral.ui.clientSideInclude(function () { /*
 <div class="profile-page">
 
   <div class="user-info">
@@ -10,6 +12,7 @@ coral.ui.clientSideInclude (function () {/*
       <div coral class="row" id='profile'
             coral-s-page="~~[coral=switcher]"
             coral-s-resource="~~[coral=switcher]"
+            coral-s-userdata="~~[coral=header]"
             coral-s-profiledata='{"profile":{"username":"&nbsp;", "image":" ", "bio":"&nbsp;"}}'
             coral-s-datasrc="state.profiledata.profile"
         >
@@ -23,7 +26,7 @@ coral.ui.clientSideInclude (function () {/*
             <img src="${d.image}" class="user-img" />
             <h4>${d.username}</h4>
             <p>
-              ${d.bio}
+              ${d.bio||'&nbsp;'}
             </p>
             <button class="btn btn-sm btn-outline-secondary action-btn">
               <i class="ion-plus-round"></i>
@@ -60,6 +63,8 @@ coral.ui.clientSideInclude (function () {/*
           </div>
         </script>
 
+        <div coral-slot='empty'>
+        </div>
         <script type='coral-template(d)' >
           <div class="article-preview">
             <div class="article-meta">
@@ -90,4 +95,4 @@ coral.ui.clientSideInclude (function () {/*
   </div>
 
 </div>
-*/})
+*/ })
