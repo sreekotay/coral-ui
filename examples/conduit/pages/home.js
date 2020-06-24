@@ -84,9 +84,10 @@ coral.ui.clientSideInclude (function () {/*
                 <p>${d.description}</p>
                 <ul class="tag-list">
                   ${
-                  (d.tagList && d.tagList.length ? '<li class="tag-default tag-pill tag-outline">' : '') +
-                  (d.tagList||[]).join ('</li><li class="tag-default tag-pill tag-outline">') +
-                  (d.tagList && d.tagList.length ? '</li>' : '')
+                  (d.tagList && d.tagList.length ?
+                      d.tagList.map(function(c){
+                          return '<li class="tag-default tag-pill tag-outline"\
+                                   onclick="event.preventDefault(); window.location.href=\'#\?tag=' + c + '\'">'+c+'</li>'}).join('') : '')
                   }
                 </ul>
                 <span>Read more...</span>

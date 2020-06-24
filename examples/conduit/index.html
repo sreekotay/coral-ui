@@ -85,9 +85,8 @@
     },
     observers: {
       page:function (updates) {
-        if (!this.state.page) return
         var page = this.data.alias[this.state.page] || this.state.page
-        if (this.data.curpage===page) return
+        if (!page || this.data.curpage===page) return
         this.data.curpage = page
         this.bind ('state.pagedata', '$js$pages/' + page + '.js') 
       },

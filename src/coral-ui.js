@@ -19,7 +19,7 @@ function UIFactory (opts) {
         var dc = ('datactx' in _s) ? this.dot(_s.datactx).value : this
         var dl = ('datasrc' in _s) ? this.dot(_s.datasrc).value : this
         var gk = _s.genkey
-        if (Array.isArray(dl) && dl.length===0) dl = null
+        if (Array.isArray(dl) && dl.length === 0) dl = null
         var gen = (dl && slot) || slots.empty || { text: '<div> </div>' }
         var key = _s.datakey; var uk
         if (!Array.isArray(dl)) dl = [dl]
@@ -369,23 +369,28 @@ function UIFactory (opts) {
   UI.prototype.events = function (k, set) { var _e = alwaysobj(this.__, 'events'); _e[k] = (set !== false && set !== 0 && set); this.__.evrx = null }
   UI.prototype.watch = function (k, o) { this.state[k] = o; this.state.__observe__() }
   UI.prototype.bind = function (k, sel, copyk, ctx) { doDataBind(this, k, sel, copyk, ctx, true) }
-  //UI.prototype.bindForce = function (k, sel, copyk, ctx) { doDataBind(this, k, sel, copyk, ctx, true) }
+  // UI.prototype.bindForce = function (k, sel, copyk, ctx) { doDataBind(this, k, sel, copyk, ctx, true) }
   UI.prototype.emit = function (ev, detail) { emit(this.rootEl, ev, detail) }
   function loadData (datapath, url, opts) { // this must be UI
     var rf = this
+    var xhrc = alwaysobj(this.__, 'xhrc')
+    if (xhrc[datapath]) xhrc[datapath].abort()
     opts = opts || {}
     var xhr = opts.xhr || new XMLHttpRequest()
     /* if (!opts.xhr || opts.responseType) // either it's new or it's passed in
     { xhr.responseType = opts.responseType || 'json' } */
     xhr.onerror = function (err) { console.log('CORAL HTTP LOAD FAIL', err, url); emit(rf.rootEl, 'coralLoadDataFail', { url: url, xhr: xhr, err: err }) }
     xhr.onload = function (ev) {
-      if (this.status === 200) {
+      if (xhr.readyState !== 4) return
+      delete xhrc[datapath]
+      if (this.status >= 200 && this.status < 300) {
         var res = this.response
         try { res = JSON.parse(res) } catch (err) {}
         if (opts.sanitize) res = sanitize(res)
         rf.dot(datapath, res)
-      } else if (this.status) xhr.onerror(ev)
+      } else if (this.status) { xhr.onerror(ev) }
     }
+    xhrc[datapath] = xhr
     xhr.open(opts.method || 'GET', url, true)
     var b = opts.body
     for (var h in (opts.headers || {})) xhr.setRequestHeader(h, opts.headers[h])
@@ -394,6 +399,7 @@ function UIFactory (opts) {
   }
   function loadHTML (datapath, url) { // this must be UI
     var rf = this
+    var htmc = alwaysobj(this.__, 'htmc')
     if (document.readyState !== 'loading') {
       var script = document.createElement('script')
       script.src = url
@@ -403,8 +409,9 @@ function UIFactory (opts) {
       script = document.getElementsByTagName('script')
       script = script[script.length - 1]
     }
+    var curc = htmc[datapath] = (htmc[datapath]||0) + 1
     script.onerror = function (err) { console.log('CORAL SCRIPT LOAD', err); script.parentNode.removeChild(script); emit(rf.rootEl, 'coralLoadHTMLFail', { url: url, script: script, err: err }) }
-    script.coralCB = function (data) { rf.dot(datapath, data) }
+    script.coralCB = function (data) { if (htmc[datapath]===curc) rf.dot(datapath, data) }
     if (!document.currentScript) window.rf_script = script
     return script
   }
