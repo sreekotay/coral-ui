@@ -11,10 +11,10 @@
   <link rel=preload as="style"  href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css" type="text/css" >
   <link rel=preload as="style"  href="https://fonts.googleapis.com/css?family=Titillium+Web:700|Source+Serif+Pro:400,700|Merriweather+Sans:400,700|Source+Sans+Pro:400,300,600,700,300italic,400italic,600italic,700italic&display=swap" type="text/css">
 
+  <script src='../../dist/coral-ui-min.js'></script>
+  <!--
   <script src='../../src/coral-observe.js'></script>
   <script src='../../src/coral-ui.js'></script>
-  <!--
-  <script src='../../dist/coral-ui-min.js'></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.0.0/animate.min.css"/>
   -->
 
@@ -73,6 +73,9 @@
         if (this.data.curpage===page) return
         this.data.curpage = page
         this.bind ('state.pagedata', '$js$pages/' + page + '.js') 
+      },
+      pagedata: function() {
+        coral.ui.run(this.rootEl) // should use mutation observers
       }
     },
     listeners: {

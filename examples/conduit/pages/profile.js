@@ -1,4 +1,4 @@
-function loadProfilArticles(updates) {
+function loadProfileArticles(updates) {
   if (this.state.modifier=='favorites') this.bind('state.articledata', '$json$' + baseurl + '/articles/?favorited=' + this.state.resource)
   else this.bind('state.articledata', '$json$' + baseurl + '/articles/?author=' + this.state.resource)
 }
@@ -46,7 +46,7 @@ coral.ui.clientSideInclude (function () {/*
         coral-s-articledata
         coral-s-datasrc="state.articledata.articles"
         >
-        <script type="coral-observer(updates)" name="modifier">loadProfilArticles.call(this,updates)</script>
+        <script type="coral-observer(updates)" name="modifier">loadProfileArticles.call(this,updates)</script>
         <script type='coral-template(d)' coral-slot='header'>
           <div class="articles-toggle">
             <ul class="nav nav-pills outline-active">

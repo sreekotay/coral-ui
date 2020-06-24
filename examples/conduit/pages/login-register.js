@@ -1,8 +1,9 @@
 coral.ui.register('*login', {
-  state: ['page', 'userdata'],
+  state: ['page'],
   data: { },
   bind: {
-    page: { selector: '[coral=switcher]' }
+    page: { selector: '[coral=switcher]' },
+    userdata: { selector: '[coral=header]' }
   },
   observers: {
     userdata: function (updates) {
@@ -16,7 +17,7 @@ coral.ui.register('*login', {
     submit: function (event) {
       if (this.state.page === 'login') {
         this.bindForce('state.userdata', '$json$' + baseurl + '/users/login', undefined, {
-          method:'POST',
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
