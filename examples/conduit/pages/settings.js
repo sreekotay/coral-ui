@@ -23,11 +23,11 @@ coral.ui.register('*settings', {
     }
   },
   listeners: {
+    input: function (event) {this.data.form[event.target.placeholder] = event.target.value},
     coralLoadDataFail: function (event) {
       enableInputs(true)
       alert ('crap - some error.  better messaging in the works')
     },
-      input: function (event) {this.data.form[event.target.placeholder] = event.target.value},
     submit: function (event) {
       enableInputs(false)
       var fd = this.data.form

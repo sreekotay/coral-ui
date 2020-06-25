@@ -49,7 +49,7 @@ coral.ui.register('*create-article', {
             title: ad.title,
             description: ad.description,
             body: ad.body,
-            tagList: ad.taglist.split(' ')
+            tagList: ad.taglist.split(',')
           }
         }
       })
@@ -75,7 +75,17 @@ coral.ui.clientSideInclude(function () { /*
                   <textarea class="form-control" rows="8" placeholder="Write your article (in markdown)" coral-name='body' coral-on-input>${d.body}</textarea>
               </fieldset>
               <fieldset class="form-group">
-                  <input type="text" class="form-control" placeholder="Enter tags" value="${d.taglist||''}" coral-name='taglist' coral-on-input>
+                  <input type="text" class="form-control" placeholder="Enter comma separated tags" value="${d.taglist||''}" coral-name='taglist' coral-on-input>
+              </fieldset>
+              <fieldset>
+                <div coral class='tag-list' coral-s-datasrc='state.list' coral-s-list coral-s-taglist='~~[coral="create-article"]'>
+                  <script type='coral-template(d)'>
+                    <span class="tag-default tag-pill">\${d}</span>
+                  <\/script>
+                  <script type='coral-observer(updates)' name='list'>
+                    this.state.list = this.state.taglist.split(',')
+                  <\/script>
+                <div>
               </fieldset>
               <button class="btn btn-lg pull-xs-right btn-primary" >
                   Publish Article

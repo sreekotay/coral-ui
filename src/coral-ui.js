@@ -619,8 +619,15 @@ function UIFactory (opts) {
   function mergeNode (c, n) {
     if (!c) return n
     if (!n) { return n }
-    c.coral = n.coral
-    if (c.coral) c.coral.rootEl = c
+    if (n.coral) {
+      var oc = c.coral
+      c.coral = n.coral
+      c.coral.rootEl = c
+      /* if (oc) {
+        xs.assign (c.coral.state, oc.state)
+        c.coral.data = oc.data
+      } */
+    } else c.coral = null
     if (c.nodeType === 3 && n.nodeType === 3) {
       c.nodeValue = n.nodeValue
       return c
