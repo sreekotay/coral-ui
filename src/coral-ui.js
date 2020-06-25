@@ -31,6 +31,8 @@ function UIFactory (opts) {
         if (this.name=='article')
           this.name=this.name
         */
+        if (this.rootEl.classList.contains('tag-list'))
+          this.name=this.name
         for (var i = 0; i < dl.length; i++) {
           var t = typeof (dl[i])
           if (dl[i]) uk = key === undefined ? dl[i].__key__ : dl[i][key]
@@ -517,6 +519,7 @@ function UIFactory (opts) {
     xs.tick(this.sym + '_rr', this, render)
   }
   function render () {
+    if (this !== this.rootEl.coral) return // shit.
     publishLF(this, 'beforeRender')
     // var t = new Date()
     var rel = this.rootEl
