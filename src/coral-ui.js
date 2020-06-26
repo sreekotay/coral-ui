@@ -30,9 +30,9 @@ function UIFactory (opts) {
           this.name=this.name
         if (this.name=='article')
           this.name=this.name
-        */
         if (this.rootEl.classList.contains('tag-list'))
           this.name=this.name
+        */
         for (var i = 0; i < dl.length; i++) {
           var t = typeof (dl[i])
           if (dl[i]) uk = key === undefined ? dl[i].__key__ : dl[i][key]
@@ -411,9 +411,9 @@ function UIFactory (opts) {
       script = document.getElementsByTagName('script')
       script = script[script.length - 1]
     }
-    var curc = htmc[datapath] = (htmc[datapath]||0) + 1
+    var curc = htmc[datapath] = (htmc[datapath] || 0) + 1
     script.onerror = function (err) { console.log('CORAL SCRIPT LOAD', err); script.parentNode.removeChild(script); emit(rf.rootEl, 'coralLoadHTMLFail', { url: url, script: script, err: err }) }
-    script.coralCB = function (data) { if (htmc[datapath]===curc) rf.dot(datapath, data) }
+    script.coralCB = function (data) { if (htmc[datapath] === curc) rf.dot(datapath, data) }
     if (!document.currentScript) window.rf_script = script
     return script
   }
@@ -573,10 +573,11 @@ function UIFactory (opts) {
     return hash
   }
   UI.prototype.htmlBegin = function (forceClean) {
-    if (!this.__.harr || forceClean) {
+    if (!this.__.harr || forceClean || this.__.hroot !== this.rootEl) {
       this.__.hmap = {}
       this.__.hgeneration = -1
     }
+    this.__.hroot = this.rootEl
     this.__.harr = []
     this.__.harr.html = ''
     this.__.harr.htmlIdx = 0
@@ -907,6 +908,7 @@ function UIFactory (opts) {
     mount: mount,
     run: run,
     template: templateEngine,
+    hydrate: hydrate,
     ready: ready,
     emit: emit,
     sanitize: sanitize,

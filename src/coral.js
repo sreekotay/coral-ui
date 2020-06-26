@@ -1,8 +1,8 @@
 // ===================================================================================
 //
-//  coral.q() .... function (selector) || (elem, selector) || (array)
-//       .f() .... function (dotpath) || (dotpath, setvalue) || (func, 'dotpath')
-//       .o   .... property - alias to first item in arry
+//  coral.q()       .... function (selector) || (elem, selector) || (array)
+//       .f()       .... function (dotpath) || (dotpath, setvalue) || (func, 'dotpath')
+//       .q(...).o  .... property - alias to first item in arry
 //
 //  coral.dot()
 //  coral.t()
@@ -16,11 +16,11 @@
   // ==================================== dot --- dotpath
   // ====================================
   function dot (obj, spl) {
-    if (typeof (spl) === 'string') spl = spl.split('.')
-    var l = spl.length
+    if (typeof (path) === 'string') path = path.split('.')
+    var l = path.length
     for (var i = 0; i < l; i++) {
-      var k = spl[i]; var o = obj; obj = o[k]
-      if ((!obj || typeof (obj) !== 'object') && i + 1 < l) return { last: { obj: o, prop: k } }
+      var k = path[i]; var o = obj; obj = o[k]
+      if ((!obj || typeof (obj) !== 'object') && ((i + 1 < l) || (!(k in o)))) return { last: { obj: o, prop: k } }
     }
     return { value: obj, obj: o, prop: k }
   }

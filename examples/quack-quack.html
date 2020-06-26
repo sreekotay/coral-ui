@@ -7,7 +7,7 @@
   <style>
       .block            {padding: 0 8px; padding-bottom:8px; border-left:1px dotted #ddd; }
       .block:before     {content: ''; width:0;}
-      .cui-card img     {max-height:128px; max-width:50%; margin-right:8px;}
+      .cui-card img     {max-height:0; max-width:50%; margin-right:8px; transition: max-height 0.15s;}
       .cui-card         {min-width: 128px; padding:2px; }
       .list             {font-style:normal; margin-bottom:8px; color:#E37151; font-size:16px;}
       a                 {text-decoration-color:#E37151;}
@@ -27,7 +27,7 @@
     <div class='cui-vertical' style='margin:auto; max-width:calc(100vw - 16px); width:640px; overflow: auto;'>
         <h2 id='duckduckgo' class='cui-wide cui-center cui-space-children' style='font-variant:small-caps; margin-top:px;'>
           <div class='cui-horizontal cui-center'>
-            <a href='http://duckduckgo.com'><img for='duckduckgo' width=48 style='padding-top:4px' src='img/duckduckgo.png'></a>
+            <a href='http://duckduckgo.com'><img for='duckduckgo' width=48  style='padding-top:4px;' src='img/duckduckgo.png'></a>
             <a href='http://duckduckgo.com' style='font-variant:small-caps;''>DuckDuckGo</a>
           </div>
           <div coral id='coralinput' style='position:relative' coral-s-datasrc='state' coral-s-inputtext  coral-on-input>
@@ -51,13 +51,13 @@
              class='cui-vertical cui-space-children'>
           <script type='coral-template(d, i, ctx)'>
             <div class='cui-card cui-horizontal cui-anim'style='overflow:auto; overflow-y:hidden'>
-              <img style='max-width:20%' src=${(d.Icon && d.Icon.URL) || ''}>
+              <img style='transition: max-height 0.15s; max-width:20%; max-height:0;' src="${(d.Icon && d.Icon.URL) || ''}" onload='this.style.maxHeight="200px"'>
               <article class='${d.Result && d.Icon && d.Icon.URL ? 'block' : ''}' >
                 <div class='${d.Result ? '' : 'list'}'>${(d.Result || d.Name || '').replace(/<br>/g, '')}</div>
                 ${d.Topics ? "<div class='cui-horizontal'>" + d.Topics.map(function(dd) { return `
                 <div class='cui-vertical ' style='align-items:flex-start'>
                   <article class='${dd.Result ? 'block' : ''}'>${dd.Result || dd.Text}</article>
-                  <img src=${(dd.Icon && dd.Icon.URL) || ''}>
+                  <img style='max-height=0;' onload='this.style.maxHeight="128px"' src=${(dd.Icon && dd.Icon.URL) || ''}>
                 </div>`
               }).join() + '</div>': ''}
             </article>

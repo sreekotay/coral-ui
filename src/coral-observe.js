@@ -148,6 +148,7 @@
         prev: o,
         chain: ha.path,
         root: ha.root || p,
+        dotpath: ha.dotpath || '',
         path: ha.dotpath ? ha.dotpath + '.' + p : p,
         find: chainfind
       }
