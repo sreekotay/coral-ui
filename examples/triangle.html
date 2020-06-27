@@ -5,6 +5,7 @@
   <meta name='viewport' content='width=device-width'>
   <script src='../src/coral-observe.js'></script>
   <script src='../src/coral-ui.js'></script>
+  <script src='../src/coral-uiapply.js'></script>
 </head>
 <style>
 [coral=dot]  {
@@ -23,14 +24,116 @@
   height: 10px;
   background: #eee;
 }
+.size {
+  padding: 8px;
+  margin: 8px;
+  background-color: red;
+  color: white;
+  border-radius: 6px;
+  display: inline-block;
+}
 </style>
 <body>
   <div coral=myapp  class=container coral-s-seconds=1>
     <script type=coral-template(d)>
       <div coral=triangle coral-s-x=0 coral-s-y=0 coral-s-s=1000></div>
     </script>
+
+  <div coral=test coral-s-test='yes' >
+    <div>
+      <input id=t2 coral-on-input>
+      <div coral=tags coral-s-prefix='~state.test~^1' coral-on-click>
+        <div style="background-color:red; color:white; display:inline-block; white-space:nowrap; margin:4px;"></div>
+      </div>
+    </div>
   </div>
+
+  </div>
+  <div id=_coffee></div>
 <script>
+    coral.ui.register ('test', {
+      state: {},
+      listeners: {
+        input: function (event) {
+          this.state.test=event.target.value
+        }
+      }
+    })
+    coral.ui.register ('tags', {
+      state: {
+        tags: ['test','me','go']
+      },
+      data: {
+        uimap: {
+          tags: 'div'
+        },
+      },
+      methods: {
+        click: function() {
+          this.state.tags.push(Math.random())
+        }
+      },
+      styles: {
+        tag: {
+
+        }
+        
+      },
+      update: function () {
+        var t = this.state.tags
+        var s = this.styles
+        for (var i=0; i<t.length; i++) 
+          this.html(i, '<div style="background-color:red; color:white; display:inline-block; white-space:nowrap; margin:4px;">' + (this.state.prefix+t[i]) + '</div>')
+        this.html(i, '<button coral-on-click=methods.click>add</button>')
+      }
+
+    })
+    var h = `<h1 class="name"></h1>
+  <div class="details">
+    <div>
+      Test
+      <div>Me</div>
+      <span class="size"><span>_s_</span><div>_n_</div></span>
+    </div>
+    <h4 class="vendor"></h4>
+  </div>`
+
+    var uimap = {
+          name: 0,
+          details: [1, {
+            size: ['.size', {s:0, n:1} ],
+            vendor: '.vendor'
+          }]
+        }
+    var propmap = {
+      name: '',
+      details: [1, {
+        size: ['.size', {s:0, n:1} ],
+        vendor: '.vendor'
+      }]
+    }
+    var state = {
+      name: 'Pumpkin Spice Latte',
+      details: {
+        size: [ {s:'Tall', n:['a', 'b']}, {s:'Grande', n:'g-name'}, {s:'Venti', n:[[1,3],'but','cat']} ],
+        vendor: 'Coffee Co.'
+      }
+    }
+    var state2 = {
+      name: 'Pumpkin Latte',
+      details: {
+        size: [ {s:'Small', n:undefined}, {s:'Small'}, {s:['test','b']} ],
+        vendor: 'My Co.'
+      }
+    }
+
+    try {
+    u = new coral.uiapply(); 
+    u.prep(document.querySelector('div'), h, uimap); 
+    var ff=document.querySelector('#coffee'); 
+    u.data (ff, state)
+    u.react(ff, state)
+  } catch (err) {}
     // =====================
     // triangle
     // =====================

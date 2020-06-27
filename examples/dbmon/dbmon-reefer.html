@@ -32,75 +32,74 @@
             </td> ${ctx.samples.script(db.lastSample.topFiveQueries)}
           </tr>
         </script>
-        <!--
-        <script type='coral-function'>
-          <tr data-id="dbs">
-            <td class="dbname" data-id="dbname"></td>
-            <td class="query-count"><span data-id="lastSample"></span></td>
-            <td data-id="topFiveQueries">
-               <span data-id="elapsed"></span>
-               <div class="popover left">
-                  <div class="popover-content" data-id="query"></div>
-                  <div class="arrow"></div>
-               </div>
-            </td>
-         </tr>
-          <tr>
-            <td class="dbname">${db.dbname}</td>
-            <td class="query-count">
-              <span class="${db.lastSample.countClassName}">${db.lastSample.nbQueries}</span>
-            </td>
-            <tr>
-              <td class="dbname">${db.dbname}</td>
-              <td class="query-count">
-                <span class="${db.lastSample.countClassName}">${db.lastSample.nbQueries}</span>
-              </td> ${ctx.samples.script(db.lastSample.topFiveQueries)}
-            </tr>  
-            {{ ctx.samples.script(db.lastSample.topFiveQueries }}
-            <td class='${q.elapsedClassName}'>${q.formatElapsed}
-              <span data-id="elapsed"></span>
-              <div class="popover left">
-                 <div class="popover-content" data-id="query"></div>
-                 <div class="arrow"></div>
-              </div>
-           {{ }}
-          </tr>
-        </script>-->
-        <script type='coral-function(db,i,ctx)' coral-slot=row_>
-
-          var htag = this.htag 
-          var hdata = this.hdata 
-
-          var c = []; var qt = db.lastSample.topFiveQueries
-          for (var i=0; i<qt.length; i++) {
-            var q = qt[i]
-            c[i] = htag('td').a({class:q.elapsedClassName}).c([
-              hdata(q.formatElapsed||'_'),
-              htag('div').a({class:'popover left'}).c([
-                htag('div').a({class:'popover-content'}).c([
-                  hdata(q.query.replace('<IDLE>', '') || '_'), 
-                  htag('div').a({class:'arrow'})
-                ])
-              ])
-            ])
-          }
-
-          var t = htag('tr').c([
-          htag('td').a({class:'dname'}).c([hdata(db.dbname)]),
-          htag('td').a({class:'query-count'}).c([
-            htag('span').a({class:db.lastSample.countClassName}).c([hdata(db.lastSample.nbQueries)])
-            ])
-          ].concat(c))
-          return t
-          return '<tr><td>test</td></tr>'
-        </script>
     </tbody>
   </table>
 
   </div>
-  <script src='../../src/morphdom.js'></script>
   <script src='../../src/coral-observe.js'></script>
   <script src='../../src/coral-ui.js'></script>
+  <script src='../../src/coral-uiapply.js'></script>
+  <script>
+    o = {"databases":[{"dbname":"cluster1 slave","query":"","formatElapsed":"","elapsedClassName":"","lastSample":{"topFiveQueries":[{"query":"SELECT blah FROM something","formatElapsed":"6.46","elapsedClassName":"Query elapsed warn","elapsed":6.4598102468553105,"waiting":false},{"query":"<IDLE> in transaction","formatElapsed":"2.58","elapsedClassName":"Query elapsed warn","elapsed":2.582446492223829,"waiting":true},{"query":"vacuum","formatElapsed":"14.30","elapsedClassName":"Query elapsed warn_long","elapsed":14.300367425793695,"waiting":false},{"query":"SELECT blah FROM something","formatElapsed":"4.92","elapsedClassName":"Query elapsed warn","elapsed":4.919603878143148,"waiting":true},{"query":"SELECT blah FROM something","formatElapsed":"5.30","elapsedClassName":"Query elapsed warn","elapsed":5.298739818268992,"waiting":true}],"queries":[{"query":"SELECT blah FROM something","formatElapsed":"6.46","elapsedClassName":"Query elapsed warn","elapsed":6.4598102468553105,"waiting":false},{"query":"<IDLE> in transaction","formatElapsed":"2.58","elapsedClassName":"Query elapsed warn","elapsed":2.582446492223829,"waiting":true},{"query":"vacuum","formatElapsed":"14.30","elapsedClassName":"Query elapsed warn_long","elapsed":14.300367425793695,"waiting":false},{"query":"SELECT blah FROM something","formatElapsed":"4.92","elapsedClassName":"Query elapsed warn","elapsed":4.919603878143148,"waiting":true},{"query":"SELECT blah FROM something","formatElapsed":"5.30","elapsedClassName":"Query elapsed warn","elapsed":5.298739818268992,"waiting":true},{"query":"SELECT blah FROM something","formatElapsed":"5.30","elapsedClassName":"Query elapsed warn","elapsed":5.302806653100315,"waiting":false},{"query":"<IDLE> in transaction","formatElapsed":"2.35","elapsedClassName":"Query elapsed warn","elapsed":2.3531173131941396,"waiting":true},{"query":"SELECT blah FROM something","formatElapsed":"7.89","elapsedClassName":"Query elapsed warn","elapsed":7.894200045707695,"waiting":true},{"query":"SELECT blah FROM something","formatElapsed":"2.80","elapsedClassName":"Query elapsed warn","elapsed":2.796468090214408,"waiting":true},{"query":"","formatElapsed":"","elapsedClassName":"","elapsed":null,"waiting":null},{"query":"","formatElapsed":"","elapsedClassName":"","elapsed":null,"waiting":null},{"query":"","formatElapsed":"","elapsedClassName":"","elapsed":null,"waiting":null}],"nbQueries":8,"countClassName":"label label-success"},"lastMutationId":938035,"nbQueries":8},{"dbname":"cluster1","query":"","formatElapsed":"","elapsedClassName":"","lastSample":{"topFiveQueries":[{"query":"SELECT blah FROM something","formatElapsed":"3.13","elapsedClassName":"Query elapsed warn","elapsed":3.1329518401230114,"waiting":true},{"query":"SELECT blah FROM something","formatElapsed":"2.89","elapsedClassName":"Query elapsed warn","elapsed":2.888305983508789,"waiting":true},{"query":"SELECT blah FROM something","formatElapsed":"4.10","elapsedClassName":"Query elapsed warn","elapsed":4.0988215931280125,"waiting":true},{"query":"SELECT blah FROM something","formatElapsed":"0.99","elapsedClassName":"Query elapsed short","elapsed":0.9890734586385963,"waiting":true},{"query":"SELECT blah FROM something","formatElapsed":"5.47","elapsedClassName":"Query elapsed warn","elapsed":5.473418907556793,"waiting":true}],"queries":[{"query":"SELECT blah FROM something","formatElapsed":"3.13","elapsedClassName":"Query elapsed warn","elapsed":3.1329518401230114,"waiting":true},{"query":"SELECT blah FROM something","formatElapsed":"2.89","elapsedClassName":"Query elapsed warn","elapsed":2.888305983508789,"waiting":true},{"query":"SELECT blah FROM something","formatElapsed":"4.10","elapsedClassName":"Query elapsed warn","elapsed":4.0988215931280125,"waiting":true},{"query":"SELECT blah FROM something","formatElapsed":"0.99","elapsedClassName":"Query elapsed short","elapsed":0.9890734586385963,"waiting":true},{"query":"SELECT blah FROM something","formatElapsed":"5.47","elapsedClassName":"Query elapsed warn","elapsed":5.473418907556793,"waiting":true},{"query":"SELECT blah FROM something","formatElapsed":"3.86","elapsedClassName":"Query elapsed warn","elapsed":3.862587629905756,"waiting":false},{"query":"<IDLE> in transaction","formatElapsed":"11.01","elapsedClassName":"Query elapsed warn_long","elapsed":11.013293869868642,"waiting":true},{"query":"SELECT blah FROM something","formatElapsed":"3.75","elapsedClassName":"Query elapsed warn","elapsed":3.751169881306345,"waiting":true},{"query":"SELECT blah FROM something","formatElapsed":"12.13","elapsedClassName":"Query elapsed warn_long","elapsed":12.132426638498929,"waiting":false},{"query":"vacuum","formatElapsed":"3.53","elapsedClassName":"Query elapsed warn","elapsed":3.531415441995409,"waiting":false},{"query":"","formatElapsed":"","elapsedClassName":"","elapsed":null,"waiting":null},{"query":"","formatElapsed":"","elapsedClassName":"","elapsed":null,"waiting":null}],"nbQueries":9,"countClassName":"label label-success"},"lastMutationId":938130,"nbQueries":9}]}
+    var htm = `
+      <table class="table table-striped latest-data" >
+        <tbody>
+          <tr>
+            <td class="dbname"></td>
+            <td class="query-count">
+              <span></span>
+            </td>
+            <td class='top-five'>
+              &nbsp;
+              <div class='popover left'> 
+                  <div class='popover-content'></div>
+                  <div class='arrow'></div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    `    
+    var uimap = {
+      databases: ['tr', {
+        dbname: 0,
+        lastSample: ['.query-count', {
+          countClassName: 0,
+          nbQueries: 0,
+          }
+        ],
+        topFiveQueries: [2, { 
+          elapsedClassName: 0,
+          formatElapsed: 0,
+          query:'.popover-content'
+        }]
+      }]
+    }
+
+    var d = document.createElement('div')
+    var u = new coral.uiapply()
+    u.funcmap.prop['databases.lastSample.countClassName'] = ['className']
+    u.funcmap.prop['databases.topFiveQueries.elapsedClassName'] = ['className']
+    u.funcmap.prop['databases.topFiveQueries.formatElapsed'] = ['textContent']
+
+    u.prep(document.querySelector('#app'), htm, uimap); 
+
+    function doit(d) {
+      o.databases = o.databases.map(function (db) {
+        if (!db.topFiveQueries)
+          db.topFiveQueries = db.lastSample.topFiveQueries
+
+        return db
+      })
+      u.data (d, o)
+      return d
+    }
+    function do_() {
+      o.databases = databases
+      return doit(document.querySelector('#app'))
+    }
+    
+  </script>
   <script src="ENV.js"></script>
   <script src="lib/perf-monitor.js"></script>
   <script src="lib/memory-stats.js"></script>
