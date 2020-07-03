@@ -1,3 +1,14 @@
+.inline-code {
+  background-color: #ddd;
+  padding: 4px; 
+  border-radius: 2px;
+}
+.cui-spacer {
+  flex-grow: 1;
+}
+.cui-align {
+ align-items:center;
+}
 .cui-vertical {
   display: flex;
   flex-direction: column;
@@ -7,20 +18,61 @@
   flex-direction: row;
 }
 .cui-center {
-  align-items:center  !important;
-  justify-content: center !important;
+  align-items:center;
+  justify-content: center;
 }
 
+.cui-fill {
+  position: relative;
+}
+.cui-fill > * {
+  position: absolute;
+  left: 0; right:0; bottom: 0; top: 0;
+}
+
+.cui-wide-show {
+  max-height: 400px;
+  transition: 1s max-height, 1s max-width;
+  overflow:hidden;
+}
+.cui-wide-show-force {
+  max-height: 400px !important;
+  max-width: 400px !important;
+}
+.cui-wide-hide {
+  max-width: 0px;
+  transition: 1s max-height, 1s max-width;
+  overflow:hidden;
+}
+.cui-wide-always {
+  max-width: 0px;
+  transition: 1s max-height, 1s max-width;
+  overflow:hidden;
+}
 @media screen and (max-width: 600px) {
   .cui-wide {
     flex-direction: column;
   }
+  .cui-wide-hide {
+    max-width:800px;
+    padding: 0;
+  }
+  .cui-wide-always {
+    max-width:800px;
+    max-height:0px;
+    padding: 0;
+  }
+  .cui-wide-show {
+    max-height: 0;
+    overflow: hidden;
+    padding: 0;
+  }
+
 }
 
 nav {
-  width:100%;
   display:flex;
-  justify-content: center;
+  justify-content: flex-start;
   background-color: #2196F3;
   padding: 2px 0;
   overflow-x:auto;
@@ -28,7 +80,7 @@ nav {
   white-space: nowrap;
 }
 nav ul {
-  padding: 0;
+  padding: 0 16px;
 }
 nav li {
   display: inline-flex;
@@ -36,6 +88,7 @@ nav li {
 }
 nav a {
   text-decoration: none;
+  margin: 8px 16px;
 }
 nav a:link {
   font-weight: 400;
@@ -44,7 +97,6 @@ nav a:link {
 }
 nav a:visited {
   color: white;
-
 }
 
 
@@ -120,6 +172,10 @@ details {
 
 summary {
   display: list-item;
+}
+
+ul {
+  list-style-type: disc;
 }
 
 abbr[title] {
@@ -304,17 +360,14 @@ tr {
 }
 
 
-button {
-  color: #2196F3 !important;
-  border-color: #2196F3 !important;
-
-}
 
 button {
+  color: #2196F3;
   text-transform: uppercase;
   background: #ffffff;
   padding: 5px 20px;
   border: 1px solid #20bf6b;
+  border-color: #2196F3;
   border-radius: 8px;
   display: inline-block;
   transition: all 0.3s ease 0s;
@@ -327,9 +380,9 @@ button:focus {
 }
 
 button:hover {
-color: #494949 !important;
+color: #494949;
 border-radius: 50px;
-border-color: #494949 !important;
+border-color: #494949;
 transition: all 0.3s ease 0s;
 }
 
@@ -430,7 +483,7 @@ figcaption {
 
 a {
   text-decoration-color: #2196F3;
-  margin-right: 8px;
+  _margin-right: 8px;
 }
 
 a:link {

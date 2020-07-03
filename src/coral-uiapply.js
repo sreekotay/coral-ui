@@ -22,8 +22,28 @@
     return a.reverse()
   }
 
+  function findEl (node, sel) {
+    var w = sel[0]
+    w = isdigit(w) ? 'num' : w
+    switch (w) {
+      case 'num':
+        var n = sel.split('.')
+        for (var i = 0; i < n[i]; i++) {
+          node = node.childNodes[n[i]]
+          if (!node) return null
+        }
+        return node
+        break
+      case '^':
+        var i = sel.substring(1) | 0
+        while (i) node = node.parentNode
+        return node
+        break
+      default: return node.querySelector(sel)
+    }
+  }
   function last () { return this[this.length - 1] }
-  function mapper (u, rootEl, rootO, cEl, o, path) {
+  UIApply.prototype._mapper = function (u, rootEl, rootO, cEl, o, path) {
     cEl = cEl || rootEl
     path = path || ''
     o = {}
@@ -31,7 +51,7 @@
     for (var k in u) {
       var uk = u[k]
       var sel = Array.isArray(uk) ? uk[0] : uk
-      var el = typeof (sel) === 'number' ? cEl.childNodes[sel] : cEl.querySelector(sel)
+      var el = typeof (sel) === 'number' ? cEl.childNodes[sel] : findEl(cEl, sel)
       if (!el) {
         console.error(rootEl, cEl)
         throw Error('selector ' + sel + ' not found for "' + k + '"')
@@ -39,10 +59,10 @@
       var rp = rootO[path + k] = getChildPath(rootEl, el)
       rp.tel = el
       rp.last = last
-      //  ar p = o[k] = getChildPath (cEl, el); p.tel = el
+      rp.path = k.split('.')
       if (sel !== uk) {
-        rp.ui = mapper(uk[1], rootEl, rootO, el, o, path + k + '.')
-      // p.ui = mapper (uk[1], cEl)
+        var uk1 = uk[1]
+        if (typeof (uk1) === 'object') { rp.ui = this._mapper(uk1, rootEl, rootO, el, o, path + k + '.') } else rp.func = this.funcmap.prop[path + k] = typeof (uk1) === 'string' ? uk1.split('.') : uk1
       }
     }
     return o
@@ -50,9 +70,9 @@
 
   UIApply.prototype.prep = function (root, html, uimap) {
     this.clear()
-    html = html.replace(/\>(\t|\s|\n|\r)*\</g, '><')
+    html = html.replace(/\>(\t|\s|\n|\r)*\</g, '><').trim()
     var f = this.fragment = coral.ui.hydrate(root, html)
-    this.uimap = mapper(uimap, f)
+    this.uimap = this._mapper(uimap, f)
     return this
   }
 
@@ -74,7 +94,7 @@
   }
 
   // ==========================================================
-  // data apply
+  // hydrate - initial
   // ==========================================================
   function elbind (el, u) {
     for (var k in u) {
@@ -98,22 +118,27 @@
     return el
   }
 
+  // ==========================================================
+  // element modify
+  // ==========================================================
   function isdigit (str) { var c = str.charCodeAt(0); return c > 47 && c < 58 }
   function isfunction (obj) { return !!(obj && obj.constructor && obj.call && obj.apply) }
   function changeEl (el, value, func) {
     // if (value === 1) debugger;
     if (func) {
-      if (isfunction(func)) func(el, value)
+      if (0 && isfunction(func)) func(el, value)
       else {
         var v = coral.dot(el, func)
         if (isfunction(v.value)) v.value.call(v.obj, value)
-        else if (v.obj) v.obj[v.prop] = value
+        else if (v.obj && v.value !== value) v.obj[v.prop] = value
       }
       return
     }
-    if (el.nodeType === 3) el.nodeValue = value
-    else if (el.nodeName === 'TEXTAREA' || el.nodeName == 'INPUT') el.value = value
-    else el.textContent = value
+    if (el.nodeType === 3) { el.nodeValue = value } else if (el.nodeName === 'TEXTAREA' || el.nodeName == 'INPUT') { el.value = value } else {
+      if (el.childNodes.length === 1 && el.firstChild.nodeType === 3) {
+        if (el.firstChild.nodeValue !== value) { el.firstChild.nodeValue = value }
+      } else if (el.textContent !== value) { el.textContent = value }
+    }
   }
 
   function callElFunc (el, path, value, f) {
@@ -121,6 +146,9 @@
     changeEl(el, value, f)
   }
 
+  // ==========================================================
+  // data apply
+  // ==========================================================
   function insertAfter (newNode, afterNode) {
     afterNode.parentNode.insertBefore(newNode, afterNode.nextSibling)
   }
@@ -166,29 +194,7 @@
         arrEl = [ce]
       }
 
-      return/*
-      var inc = au.tel.childNodes.length
-      var pel = pathEl(rootEl, au, offsets); if (!pel) return
-      for (var i = 0; i < o.length; i++) {
-        var e = o[i]
-        for (var j = 0; j < (inc || 1); j++) {
-          if (pel.childNodes.length <= cl++) {
-            pel.appendChild(inc
-              ? au.tel.childNodes[j].cloneNode(true)
-              : document.createTextNode(''))
-          }
-        }
-        if (typeof (e) === 'object') {
-          offsets[au.length] = i * (inc || 1)
-          applier(ui, rootEl, e, path, offsets)
-        } else {
-          callElFunc(pel.childNodes[i * (inc || 1)], path, e, f)
-          for (var j = 1; j < inc; j++) callElFunc(pel.childNodes[i * (inc || 1) + j], path, '', f)
-        }
-      }
-      while (pel.childNodes.length > cl) pel.removeChild(pel.childNodes[pel.childNodes.length - 1])
       return
-      */
     }
 
     var op = path
@@ -198,14 +204,14 @@
       var pk = path + k
 
       if ((k | 0) == k) {
-        var upk = u[op]; if (!upk) continue
+        var uop = u[op]; if (!uop) continue
         if (typeof (ok) === 'object') {
           offsets = offsets.slice()
-          // offsets[upk.length - 1] = k
-          applier(ui, rootEl, ok, op, offsets) 
+          // offsets[uop.length - 1] = k
+          applier(ui, rootEl, ok, op, offsets)
           continue
         }
-        var el = pathEl(rootEl, upk, offsets)
+        var el = pathEl(rootEl, uop, offsets)
         if (el && el.arrEl) {
           callElFunc(el.arrEl[k], op, ok, f)
           continue
@@ -213,8 +219,8 @@
       }
 
       if (typeof (ok) === 'object') { applier(ui, rootEl, ok, pk, offsets); continue }
-      var upk = u[pk]; if (!upk) continue
-      var el = pathEl(rootEl, upk, offsets)
+      if (!u[pk]) continue
+      var el = pathEl(rootEl, u[pk], offsets)
       if (el) {
         if (el.arrEl) applier(ui, rootEl, [ok], pk, offsets)
         else callElFunc(el, pk, ok, f)
@@ -228,12 +234,33 @@
     return this
   }
 
+  // ==========================================================
+  // element modify
+  // ==========================================================
   UIApply.prototype.react = function (el, state) {
     var ui = this
+    var u = ui.uimap
     coral.observe(state, function (updates) {
-      //        if (updates.action !== 'set') return
       var o = {}
       o[updates.prop] = updates.value
+
+      var offsets = []
+      var c = updates.chain
+      var path = ''
+      if (!c) return
+      for (var i = 0; i < c.length; i++) {
+        var ci = c[i]
+        if (Array.isArray(ci.o)) {
+          if (!u[path]) return
+          offsets[u[path].length - 1] = ci.p | 0
+        } else {
+          if (updates.action !== 'set') { o = {}; o[ci.p] = updates.obj; pp = '' + (path || '') }
+          path = (path ? path + '.' : '') + ci.p 
+        }
+      }
+      ui.data(el, o, updates.action === 'set' ? path : pp, offsets)
+      /*
+      if (1) return
       var dp = updates.dotpath.split('.')
       var offsets = []
       var path = ''
@@ -241,15 +268,19 @@
       var pp
       for (var i = 0; i < dp.length; i++) {
         var dpi = dp[i]
-        if ((dpi | 0) == dp[i]) offsets[l - 1] = dpi | 0
-        else {
+        if ((dpi | 0) == dp[i]) {
+          if (u[path]) {
+            offsets[u[path].length - 1] = dpi | 0
+          }
+        } else {
           l++
           if (updates.action !== 'set') { o = {}; o[dpi] = updates.obj; pp = '' + (path || '') }
           path = (path ? path + '.' : '') + dpi
         }
       }
       ui.data(el, o, updates.action === 'set' ? path : pp, offsets)
-      //console.log(updates)
+      // console.log(updates)
+      */
     })
   }
 

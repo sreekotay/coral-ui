@@ -30,7 +30,7 @@ var render = function () {
   if (anim) setTimeout(render, ENV.timeout)
   var ui = coral.ui.find('#coraltable')
   if (ui) ui.render()
-  if (!ui) do_()
+  //if (!ui) do_()
 }
 
 coral.ui.ready(function () {

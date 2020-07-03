@@ -41,7 +41,7 @@ function UIFactory (opts) {
           this.html(uk || i, row)
         }
         // delete dc.__hmap__
-        if (slots.footer) this.html(-2, slots.footer.script ? slots.footer(dc) : slots.footer.text)
+        if (slots.footer) this.html(-2, slots.footer.script ? slots.footer.script(dc) : slots.footer.text)
       }
     }
   }
@@ -78,6 +78,7 @@ function UIFactory (opts) {
       if (ftext) {
         switch (type.split('(')[0].trim()) {
           case 'coral-method': alwaysobj(attrBag, 'methods')[c.getAttribute('name') || 'default'] = new Function(args, ftext); break
+          //case 'coral-listener': alwaysobj(attrBag, 'listeners')[c.getAttribute('name') || 'default'] = new Function(args, ftext); break
           case 'coral-observer': alwaysobj(attrBag, 'observers')[c.getAttribute('name') || 'default'] = new Function(args, ftext); break
           case 'coral-function': c.coralScript = new Function(args, ftext); break
           case 'coral-template': c.coralScript = templateEngine(args, ftext); break
@@ -468,7 +469,7 @@ function UIFactory (opts) {
       case '[':
         var el = (selctx || document).querySelector(sel)
         refobj = el && el.coral
-        if (!refobj) coralError('unable to locate coral for bind')
+        if (!refobj) coralError('unable to locate coral for bind', selctx, copyprop)
         sp = realizeSource(refobj, copyprop)
         break
       default:
@@ -846,8 +847,8 @@ function UIFactory (opts) {
     }
   }
 
-  /*
-  function createCSS (name, rules) {
+
+  function createCSS(name, rules) {
     var style = document.getElementById ('__dynamic_styles__')
     if (!style) {
       style = document.createElement('style');
@@ -859,7 +860,7 @@ function UIFactory (opts) {
   }
 
   createCSS('coral-helper', 'display:none;')
-*/
+
   var rf_s
   function sanitize (str) {
     if (typeof (str) === 'object') {
@@ -912,6 +913,7 @@ function UIFactory (opts) {
     ready: ready,
     emit: emit,
     sanitize: sanitize,
+    cssRule: createCSS,
     styleBag: UI.prototype.styleBag,
     registry: function (name) { return name ? rf_registry[name] : rf_registry },
     find: function (a, ctx) { a = this.findAll(a, ctx); return a ? a[0] : null },
@@ -928,9 +930,16 @@ window.coral.ui = UIFactory({ autorun: true })
   var coral = window.coral = window.coral || {}; coral.ui = coral.ui || {}
   coral.ui.loadScript = function (url, cb) {
     if (document.querySelector('script[url="' + (url) + '"]')) { if (cb) cb(true); return }
-    var s = document.createElement('script')
-    s.src = url
-    s.setAttribute('url', url)
+    if (url.endsWidth('css')) {
+      var s = document.createElement('link')
+      s.setAttribute('rel', 'stylesheet')
+      s.setAttribute('type', 'text/css')
+      s.setAttribute('href', url)
+    } else {
+      var s = document.createElement('script')
+      s.src = url
+      s.setAttribute('url', url)
+    }
     s.onload = function () { cb(false) }
     document.getElementsByTagName('head')[0].appendChild(s)
     // setTimeout (()=>document.getElementsByTagName('head')[0].appendChild(s), 200000)

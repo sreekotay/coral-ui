@@ -10,7 +10,7 @@
   <div id="app" >
     <table class="table table-striped latest-data" >
     <tbody id=coraltable 
-          coral
+          _coral
           coral-s-datasrc='state.w.databases' 
           coral-s-datactx='slots'
           _coral-s-w='{"databases":[]}'
@@ -63,13 +63,13 @@
     var uimap = {
       databases: ['tr', {
         dbname: 0,
-        lastSample: ['.query-count', {
-          countClassName: 0,
+        lastSample: ['1.0', {
+          countClassName: [0, 'className'],
           nbQueries: 0,
           }
         ],
         topFiveQueries: [2, { 
-          elapsedClassName: 0,
+          elapsedClassName: [0, 'className'],
           formatElapsed: 0,
           query:'.popover-content'
         }]
@@ -78,9 +78,6 @@
 
     var d = document.createElement('div')
     var u = new coral.uiapply()
-    u.funcmap.prop['databases.lastSample.countClassName'] = ['className']
-    u.funcmap.prop['databases.topFiveQueries.elapsedClassName'] = ['className']
-    u.funcmap.prop['databases.topFiveQueries.formatElapsed'] = ['textContent']
 
     u.prep(document.querySelector('#app'), htm, uimap); 
 
