@@ -61,8 +61,7 @@
       var gf = function () { return v[p] }
       var sf = function (n) {
         var o = v[p]; v[p] = n
-        if (typeof (n) === 'object' && n !== null && !n.__xs__)
-          tick(_obj.s, obj, function () { objectObserver(n, handler, { o: obj, p: p }, path) }, true)
+        if (typeof (n) === 'object' && n !== null && !n.__xs__) { tick(_obj.s, obj, function () { objectObserver(n, handler, { o: obj, p: p }, path) }, true) }
         trigger('set', obj, p, n, o)
         return n
       }
@@ -213,15 +212,23 @@
   // ==============
   // helper stuff
   // ==============
+  function isfunction (obj) { return !!(obj && obj.constructor && obj.call && obj.apply) }
+  function dotapply (value) { var v = this.obj[this.prop]; isfunction(v) ? v.apply(this.obj, Array.isArray(value) ? value : [value]) : this.obj[this.prop] = value }
+  function doterror (value) { console.error('property not found', this, value) }
+  function ppath (p) { if (typeof (p) === 'string') p = p.split('.'); return p }
   function dot (obj, path) {
-    if (typeof (path) === 'string') path = path.split('.')
+    path = ppath(path)
     var l = path.length
     for (var i = 0; i < l; i++) {
       var k = path[i]; var o = obj; obj = o[k]
-      if ((!obj || typeof (obj) !== 'object') && ((i + 1 < l) || (!(k in o)))) return { last: { obj: o, prop: k } }
+      if ((!obj || typeof (obj) !== 'object') && ((i + 1 < l) || (!(k in o)))) return { last: { obj: o, prop: k }, apply: doterror }
     }
-    return { value: obj, obj: o, prop: k }
+    return { value: obj, obj: o, prop: k, apply: dotapply }
   }
+  dot.array = function (arr, path) { path = ppath(path); var v = []; for (var i = 0; i < arr.length; i++) v.push(dot(arr[i], path)); return v }
+  dot.arrayApply = function (arr, path, value) { path = ppath(path); for (var i = 0; i < arr.length; i++) dot(arr[i], path).apply(value) }
+  dot.arrayKeysApply = function (arr, keys) { for (var i = 0; i < arr.length; i++) dot.keysApply(arr[i], keys) }
+  dot.keysApply = function (obj, keys) { for (var k in keys) dot(obj, k).apply(keys[k]) }
 
   function deepcopy (a, b) {
     if (b === undefined) return a

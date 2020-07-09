@@ -78,7 +78,7 @@ function UIFactory (opts) {
       if (ftext) {
         switch (type.split('(')[0].trim()) {
           case 'coral-method': alwaysobj(attrBag, 'methods')[c.getAttribute('name') || 'default'] = new Function(args, ftext); break
-          //case 'coral-listener': alwaysobj(attrBag, 'listeners')[c.getAttribute('name') || 'default'] = new Function(args, ftext); break
+          // case 'coral-listener': alwaysobj(attrBag, 'listeners')[c.getAttribute('name') || 'default'] = new Function(args, ftext); break
           case 'coral-observer': alwaysobj(attrBag, 'observers')[c.getAttribute('name') || 'default'] = new Function(args, ftext); break
           case 'coral-function': c.coralScript = new Function(args, ftext); break
           case 'coral-template': c.coralScript = templateEngine(args, ftext); break
@@ -185,8 +185,14 @@ function UIFactory (opts) {
         var ev = k.split('.')
         var e = ev[0]
         if (!rf_listeners[e]) { // we only need to add it once
-          rf_listeners[e] = listenerFactory(e)
-          document.addEventListener(e, rf_listeners[e], false)
+          var eli = listenerFactory(e)
+          if (ev[1]==='local') {
+            al[e] = rl[e+'.local']
+            el.addEventListener(e, eli, false)
+          } else {
+            rf_listeners[e] = eli
+            document.addEventListener(e, eli, false)
+          }
         }
         rl[e] = rl[k]
         if (rl[ev[1]] === 'stop') rl[e].coralStop = true
@@ -241,11 +247,9 @@ function UIFactory (opts) {
             }
           }
           var rn = coral && coral.name
-          if (rf_registry[rn]) {
-            rr = rf_registry[rn]
-            if (rr.listeners && rr.listeners[type]) {
-              if (rr.listeners[type].call(coral, event) === 'stop' || rr.listeners[type].coralStop) { return } // hmm - should we support bubbling?
-            }
+          var eh = ((coral||{}).listeners||{})[type] || ((rf_registry[rn]||{}).listeners||{})[type]
+          if (eh) {
+            if (eh.call(coral, event) === 'stop' || eh.coralStop) { return } // hmm - should we support bubbling?
           }
         }
         el = el.parentNode
@@ -441,7 +445,7 @@ function UIFactory (opts) {
     return str.replace('{JSONP}', fname)
   }
   function looseNode (el) { var r = el && el.getRootNode(); return r && r !== document && r.nodeName !== '#document-fragment' }
-  function findParentCoral (rf, count) {
+  /*function findParentCoral (rf, count) {
     var el = rf && rf.rootEl
     while (rf && el) {
       if (count-- == 0) return rf
@@ -449,7 +453,7 @@ function UIFactory (opts) {
       rf = el.coral
     }
     return null
-  }
+  }*/
   function doDataBind (rf, proppath, sel, copyprop, selctx, force) {
     var refobj, sp
     sel = sel || '^'
@@ -460,7 +464,8 @@ function UIFactory (opts) {
     if (!force && _bp.proppath === proppath && _bp.selector === sel && _bp.prop === copyprop && !_bp.copy) return
     switch (sel[0]) {
       case '^':
-        refobj = findParentCoral(rf, sel.substring(1) | 0)
+        refobj = rf.rootEl
+        var which = sel.substring(1) | 0; while (which--) refObj = refObj.parentElement
         if (!refobj) coralError('unable to find parent to state bind', rf, proppath)
         sp = realizeSource(refobj, copyprop)
         break
@@ -692,7 +697,7 @@ function UIFactory (opts) {
     for (var k in hm) { // delete untouched
       var hc = hm[k]
       if (hc.generation === genid) continue
-      if (hc.el) hc.el.parentNode.removeChild(hc.el)
+      if (hc.el && hc.el.parentNode) hc.el.parentNode.removeChild(hc.el)
       delete hm[k]
     }
 
@@ -771,7 +776,7 @@ function UIFactory (opts) {
     var el = rf_range.createContextualFragment(h)
     return type.nodeName === 'TBODY' ? el.childNodes[0] : el
   }
-  UI.prototype.html = function (id, htmlGen) {
+  UI.prototype.html = function (id, htmlGen, force) {
     if (!this.__.harr) this.htmlBegin()
     var _ = this.__
     var ha = _.harr
@@ -786,7 +791,7 @@ function UIFactory (opts) {
       hc.generation = genid
       ha[idx] = hc // set the position
       if (hc.el && !hc.el.parentNode) hc.el = null
-      if (hc.el && hc.hsh === hsh) return
+      if (hc.el && hc.hsh === hsh && !force && !hc.el.__coral_dirty__) return
       hc.h = ha.htmlIdx++
       ha.html += htmlGen
       hc.hsh = hsh
@@ -828,6 +833,7 @@ function UIFactory (opts) {
         aeindex.push(getChildIndex(ael))
         ael = ael.parentNode
       }
+      if (!ael || !ael.parentNode) ael = null
     }
     return function () {
       if (ael) {
@@ -847,19 +853,18 @@ function UIFactory (opts) {
     }
   }
 
-
-  function createCSS(name, rules) {
-    var style = document.getElementById ('__dynamic_styles__')
+  function createCSS (name, rules) {
+    var style = document.getElementById('__coral_styles__')
     if (!style) {
-      style = document.createElement('style');
-      style.id = '__dynamic_styles__'; style.type = 'text/css'
+      style = document.createElement('style')
+      style.id = '__coral_styles__'; style.type = 'text/css'
       document.getElementsByTagName('head')[0].appendChild(style)
     }
     var sheet = style.sheet
     sheet.insertRule(name + '{' + rules + '}', 0)
   }
 
-  createCSS('coral-helper', 'display:none;')
+  //createCSS('coral-helper', 'display:none;')
 
   var rf_s
   function sanitize (str) {
