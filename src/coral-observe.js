@@ -229,6 +229,7 @@
   dot.arrayApply = function (arr, path, value) { path = ppath(path); for (var i = 0; i < arr.length; i++) dot(arr[i], path).apply(value) }
   dot.arrayKeysApply = function (arr, keys) { for (var i = 0; i < arr.length; i++) dot.keysApply(arr[i], keys) }
   dot.keysApply = function (obj, keys) { for (var k in keys) dot(obj, k).apply(keys[k]) }
+  dot.keysFromArray = function (obj, arrOfKeys) { var o = {}; var aok = arrOfKeys; for (var k in aok) o[aok[k]] = dot(obj, aok[k]); return o }
 
   function deepcopy (a, b) {
     if (b === undefined) return a

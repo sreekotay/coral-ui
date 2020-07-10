@@ -34,7 +34,7 @@ var virtualBinder = function (rootEl) {
     l = Math.max(l, 0)
     t = Math.max(t, 0)
     r = Math.min(r, window.screen.width)
-    b = Math.min(r, window.screen.height)
+    b = Math.min(b, window.screen.height)
     var vis = coral.dot.array(els, 'style.display')
     if (t >= b || l >= r) {
       return
@@ -48,7 +48,7 @@ var virtualBinder = function (rootEl) {
       if (vis[i].value !== 'none' && !tr) tr = els[i].getBoundingClientRect()
       else if (vis[i].value === 'none' && !br && i) br = els[i - 1].getBoundingClientRect()
     }
-    if (tr && tr.top <= t+props.paddingTop && br && br.bottom>=b+ props.paddingTop) return
+    //if (tr && tr.top <= t+props.paddingTop && br && br.bottom>=b+ props.paddingTop) return
 
     coral.dot.arrayApply(els, 'style.display', 'none')
     var y = 0
@@ -63,8 +63,9 @@ var virtualBinder = function (rootEl) {
       else if (marginTop + er.top >= b +  props.paddingTop) { marginBottom += er.height } 
       else { h += er.height; show = true }
       el.style.display = show ? 'block' : 'none'
-      //console.log (i, y|0, marginTop|0, h|0, marginBottom|0, el.style.display )
+      console.log (i, y|0, marginTop|0, h|0, marginBottom|0, el.style.display )
       y += er.height
+      if (marginBottom>0) break;
     }
     rootEl.style.paddingTop = (props.paddingTop + marginTop) + 'px'
     rootEl.style.paddingBottom = (props.paddingBottom + marginBottom) + 'px'

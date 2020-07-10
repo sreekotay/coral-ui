@@ -401,7 +401,7 @@ blockquote {
   color: #444;
   padding: 0;
   padding-left: 12px;
-  padding-right: 8px;
+  padding-right: 12px;
   border: none;
   border-left: 3px solid #ddd;
   border-color: #ccc;
@@ -446,7 +446,7 @@ kbd {
 
 pre {
   overflow: auto;
-  background: #f7f7f7;
+  background: #f0f0f0;
   padding: calc(1.5 * 16px);
   border: 0.0625rem solid #eee;
   border-left: 0.25rem solid #ddd;
@@ -497,7 +497,7 @@ a:hover, a:focus {
 }
 
 .inline-code, code {
-  background-color: #ddd;
+  background-color: #f0f0f0;
   padding: 4px; 
   border-radius: 2px;
 }
