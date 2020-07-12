@@ -222,20 +222,22 @@ table, table.horizontal {
   display: table;
 }
 
-tr:nth-child(even) {background: #e7e7e7}
-tr:nth-child(odd) {background: #FFF}
+tbody > tr:nth-child(even) {background: #e7e7e7}
+tbody > tr:nth-child(odd) {background: #FFF}
 
-th {
-  background-color: #2196F3;
-  color: white;
-  border: none;
-}
+
 td {
   border: none;
 }
 
-tr {
+tbody > tr {
   text-align:left; 
+}
+
+th, thead > tr {
+  background-color: #2196F3;
+  color: white;
+  border: none;
 }
 
 .cui-tabs {
