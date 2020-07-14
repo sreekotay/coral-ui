@@ -186,8 +186,8 @@ function UIFactory (opts) {
         var e = ev[0]
         if (!rf_listeners[e]) { // we only need to add it once
           var eli = listenerFactory(e)
-          if (ev[1]==='local') {
-            al[e] = rl[e+'.local']
+          if (ev[1] === 'local') {
+            al[e] = rl[e + '.local']
             el.addEventListener(e, eli, false)
           } else {
             rf_listeners[e] = eli
@@ -247,7 +247,7 @@ function UIFactory (opts) {
             }
           }
           var rn = coral && coral.name
-          var eh = ((coral||{}).listeners||{})[type] || ((rf_registry[rn]||{}).listeners||{})[type]
+          var eh = ((coral || {}).listeners || {})[type] || ((rf_registry[rn] || {}).listeners || {})[type]
           if (eh) {
             if (eh.call(coral, event) === 'stop' || eh.coralStop) { return } // hmm - should we support bubbling?
           }
@@ -445,7 +445,7 @@ function UIFactory (opts) {
     return str.replace('{JSONP}', fname)
   }
   function looseNode (el) { var r = el && el.getRootNode(); return r && r !== document && r.nodeName !== '#document-fragment' }
-  /*function findParentCoral (rf, count) {
+  /* function findParentCoral (rf, count) {
     var el = rf && rf.rootEl
     while (rf && el) {
       if (count-- == 0) return rf
@@ -453,7 +453,7 @@ function UIFactory (opts) {
       rf = el.coral
     }
     return null
-  }*/
+  } */
   function doDataBind (rf, proppath, sel, copyprop, selctx, force) {
     var refobj, sp
     sel = sel || '^'
@@ -521,9 +521,7 @@ function UIFactory (opts) {
   // render
   // ============================================
   UI.prototype.render_ = render
-  UI.prototype.render = function () {
-    xs.tick(this.sym + '_rr', this, render)
-  }
+  UI.prototype.render = function () { xs.tick(this.sym + '_rr', this, render) }
   function render () {
     if (this !== this.rootEl.coral) return // shit.
     publishLF(this, 'beforeRender')
@@ -536,7 +534,7 @@ function UIFactory (opts) {
       if (fc) this.htmlBegin()
       fc = this.__.fcounter //  reset it
       var res = update.call(this, this.slots) || ''
-      if (this.__.harr) this.htmlEnd()
+      if (this.__.harr && res !== 'done') this.htmlEnd()
       else {
         if (typeof (res) === 'string') {
           if (res !== 'done') rel.innerHTML = res // a way to "out"
@@ -549,6 +547,7 @@ function UIFactory (opts) {
       }
       // if (rel.parentNode.classList.contains('container')) { console.log('render', new Date() - t) }
     }
+    this.__.renderflag = 0
     publishLF(this, 'afterRender')
   }
   UI.prototype.rerender = function () {
@@ -579,7 +578,7 @@ function UIFactory (opts) {
     return hash
   }
   UI.prototype.htmlBegin = function (forceClean) {
-    if (!this.__.harr || forceClean || this.__.hroot !== this.rootEl) {
+  if (!this.__.harr || forceClean || this.__.hroot !== this.rootEl) {
       this.__.hmap = {}
       this.__.hgeneration = -1
     }
@@ -607,7 +606,9 @@ function UIFactory (opts) {
     // try {
     var a = {}; var at
     var na = n.attributes; var nal = na.length
-    if (rf_tagvalue[c.nodeName] && c.value !== n.value) { c.value = n.value } // for textarea and input
+    if (rf_tagvalue[c.nodeName] && c.value !== n.value) { 
+      c.value = n.value 
+    } // for textarea and input
     for (var i = 0; i < nal; i++) {
       at = na[i]; a[at.name] = true
       if (c.getAttribute(at.name) !== at.value) {
@@ -635,7 +636,7 @@ function UIFactory (opts) {
         c.coral.data = oc.data
       } */
     } else c.coral = null
-    if (c.nodeType === 3 && n.nodeType === 3) {
+    if (c.nodeType === 3 && n.nodeType === 3 && c.nodeValue !== n.nodeValue) {
       c.nodeValue = n.nodeValue
       return c
     }
@@ -653,7 +654,12 @@ function UIFactory (opts) {
       while (--i >= 0) {
         var ccn = cc[i]
         var ncn = nc[i]
-        if (ccn.nodeType === 3 && ncn.nodeType === 3) { if (ccn.nodeValue !== ncn.nodeValue) ccn.nodeValue = ncn.nodeValue; continue }
+        if (ccn.nodeType === 3 && ncn.nodeType === 3) {
+          if (ccn.nodeValue !== ncn.nodeValue) { 
+            ccn.nodeValue = ncn.nodeValue 
+          }
+          continue
+        }
         if (ccn.isEqualNode(ncn)) continue
         if (ccn.nodeName !== ncn.nodeName || !mergeNode(ccn, ncn)) {
           c.replaceChild(ncn, ccn)
@@ -785,13 +791,17 @@ function UIFactory (opts) {
     var genid = _.hgeneration
     var hsh = hash(htmlGen); var hc
     id = (id === undefined || id === null) ? hsh : id
+    if (hm[id] && hm[id].generation === genid) {
+      id = '__' + idx + '__'
+    }
     if (hm[id]) {
       hc = hm[id]
-      if (hc.generation === genid) coralError('duplicate html() id')
+      if (hc.generation === genid) { coralError('duplicate html() id') }
       hc.generation = genid
       ha[idx] = hc // set the position
       if (hc.el && !hc.el.parentNode) hc.el = null
       if (hc.el && hc.hsh === hsh && !force && !hc.el.__coral_dirty__) return
+      if (hc.el.__coral_dirty__) delete hc.el.__coral_dirty__
       hc.h = ha.htmlIdx++
       ha.html += htmlGen
       hc.hsh = hsh
@@ -864,7 +874,7 @@ function UIFactory (opts) {
     sheet.insertRule(name + '{' + rules + '}', 0)
   }
 
-  //createCSS('coral-helper', 'display:none;')
+  // createCSS('coral-helper', 'display:none;')
 
   var rf_s
   function sanitize (str) {

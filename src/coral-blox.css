@@ -1,0 +1,120 @@
+body {
+  font-family: Arvo;
+}
+
+.container > * > * {
+  border-radius: 4px;;
+  border: 1px dashed rgba(0,0,0, 0.0);
+  border-bottom: 1px dashed rgba(0,0,0,0.07);
+
+}
+
+[coral=cui-editor] * {
+  position: relative;;
+  transition: all 0.25s;
+  top: 0; 
+  left: 0;
+  z-index: 1;
+}
+
+.cui-editor-focus {
+  _max-width:0;
+  max-height:0;
+  padding:0;
+  margin:0;
+  transition: 1s all;
+  display:flex;
+  overflow: hidden;
+}
+.cui-focus .cui-editor-focus {
+  max-width:1000px;
+  max-height:1000px;
+  padding: initial;
+  margin: initial;
+}
+.cui-editor-wrapper {
+  display: inline-block;
+  vertical-align: top;
+  width:100%;
+}
+
+.cui-editor-item {
+  padding: 4px 8px;
+}
+.cui-editor-h1 *,
+.cui-editor-h2 *,
+.cui-editor-h3 *,
+.cui-editor-h4 *,
+.cui-editor-h5 *,
+.cui-editor-h6 *{
+  font-weight:700;
+}
+.cui-editor-li {
+  padding: 0px;
+  padding-left: 12px;
+  _list-style-type: none;
+}
+.container img, .container block {
+  display: block;
+  max-width: 100%;
+}
+.container {
+  padding: 64px;
+  overflow: hidden;
+  border-radius: 8px;
+  max-width: 1072px;
+  margin: 0 auto;
+  background-color: white;
+}
+
+body {
+  padding:32px; 
+}
+
+@media screen and (max-width: 600px) {
+  .container {
+    padding: 8px;
+  }
+  body {
+  padding:8px; 
+}
+}
+
+.container > .cui-focus::before {
+  pointer-events: none;
+  opacity: 0.1;
+  content: ' ';
+  position: absolute;
+  left: -16px;
+  right:-16px; 
+  top: -8px;
+  bottom:-8px; 
+  background-color: #a0e4ff;
+  z-index: 0;
+} 
+
+
+.cui-editor-item > *::before {
+  content: attr(data-bullet);
+  position: absolute;
+  right: calc(100% + 8px);
+}
+.selected, .selected:focus {
+    background-color:#a0e4ff !important;
+    border-radius: 16px;
+}
+.container *::selection {
+  background:#a0e4ff;
+} 
+.container {
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08), 0 3px 10px rgba(0, 0, 0, 0.12);
+
+}
+
+.container *:focus {
+    outline: none; 
+    _outline: 1px dashed rgba(0,0,0, 0.4);
+    _background-color: red;//rgba(255, 226, 65, 0.06);
+    _border: 1px dashed rgba(255, 226, 65, 0.8);
+}
+

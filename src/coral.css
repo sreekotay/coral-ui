@@ -164,7 +164,10 @@ h1,h2,h3,h4,h5,h6 {
 details {
   display: block;
 }
-
+summary:focus {
+  border: 1px solid #2196F3;
+  outline: none;
+}
 summary {
   display: list-item;
 }
@@ -222,8 +225,8 @@ table, table.horizontal {
   display: table;
 }
 
-tbody > tr:nth-child(even) {background: #e7e7e7}
-tbody > tr:nth-child(odd) {background: #FFF}
+tbody > tr:nth-child(even) { background: rgba(0,0,0,0.05); }
+tbody > tr:nth-child(odd) { background: none; }
 
 
 td {
@@ -392,6 +395,7 @@ hr {
   border: 1px dashed #2196F3;
   margin: 8px 0;
   line-height: 1.25em;
+  max-height: 0;
   background: linear-gradient(to right, transparent, var(--border-color) 20%, var(--border-color) 80%, transparent);
 }
 
@@ -430,7 +434,7 @@ blockquote[cite]:after {
 
 code, kbd, pre, samp {
   font-family: Menlo, Consolas, monospace;
-  font-size: 0.85em;
+  font-size: 12px;
 }
 
 code {
@@ -453,7 +457,7 @@ pre {
   border: 0.0625rem solid #eee;
   border-left: 0.25rem solid #ddd;
   border-radius: 0 8px 8px 0;
-  margin: 8px 0;
+  margin: 2px 0;
   color: black;
 }
 
@@ -502,4 +506,7 @@ a:hover, a:focus {
   background-color: #f0f0f0;
   padding: 4px; 
   border-radius: 2px;
+}
+code {
+  padding: 0; 
 }
