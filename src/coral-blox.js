@@ -102,7 +102,7 @@
     if (custom) return custom.toBlock.call(bloxcall, rootEl, { type: b.type })
 
     depth = depth || 0
-    if (b.type && b.type[0] === 'br' && depth === 0) { b.type = ['p', 'br']; return b }
+    if (b.type && b.type[0] === 'br' && depth === 0) { b.type = ['p']; b.data = '\n'; return b }
 
     var els = rootEl.childNodes
     getAttributesFromDOM(rootEl, b)
@@ -286,8 +286,8 @@
     'cui-ed-oembed': {
       contains: { IFRAME: true, inline: true, INPUT: true, P: true, DIV: true },
       toHTML: function (b, edit) {
-        return '<div coral-editor coral-blox=cui-ed-oembed>' + 
-               '<iframe width="480" height="270" src="https://www.youtube.com/embed/M3r2XDceM6A?feature=oembed" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>' + 
+        return '<div coral-editor coral-blox=cui-ed-oembed>' +
+               '<iframe width="480" height="270" src="https://www.youtube.com/embed/M3r2XDceM6A?feature=oembed" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>' +
                '</div>'
       }
     },
@@ -297,8 +297,8 @@
       toHTML: function (b, edit) {
         return '<div coral-blox=cui-ed-image><img ' + this.attrString(b, ['src', 'width', 'height']) + '>' +
                '<p coral-editor-src class="cui-editor-focus" contenteditable=true>' + this.esc(b.src || '') + '</p>' +
-               '<p coral-editor-controls contenteditable=true>' + // <input class="cui-editor-focus">' +
-               this.toHTML(b.caption, 2) + '</p></div>'
+               '<div coral-editor-controls contenteditable=true>' + // <input class="cui-editor-focus">' +
+               this.toHTML(b.caption, 2) + '</div></div>'
       },
       toBlock: function (rootEl, b) {
         var img = rootEl.querySelector('img')
@@ -510,14 +510,14 @@
       selection.addRange(range)
     }
     if (inchars && inchars.els && inchars.els.length && el === inchars.el) {
-      //setTimeout(function () {
-        var els = inchars.els
-        var a = {}
-        for (var i = 0; i < els.length; i++) a[els[i]] = true
-        els = inchars.el.children
-        for (var i = 0; i < els.length; i++) els[i].classList.toggle('selected', a[i] || false)
-        if (el.coral) el.coral.preserveSelection = true
-      //}, 0)
+      // setTimeout(function () {
+      var els = inchars.els
+      var a = {}
+      for (var i = 0; i < els.length; i++) a[els[i]] = true
+      els = inchars.el.children
+      for (var i = 0; i < els.length; i++) els[i].classList.toggle('selected', a[i] || false)
+      if (el.coral) el.coral.preserveSelection = true
+      // }, 0)
     }
     if (el && el !== document.activeElement && el.focus) {
       if (0 && (typeof (inchars) !== 'object' || !inchars.fallback) && !chars.startNode) {
