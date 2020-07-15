@@ -342,7 +342,7 @@
             if (cut) {
               var text = coral.ui.DOM.toBlock (cut.after) || {type:['p'], data: cut.after}
               if (cut.before && text.type[0]!=='p') text.type = ['p']
-              b = coral.ui.DOM.toBlocks (cut.before)[0] || {type:['p'], data: cut.before}
+              b = coral.ui.DOM.toBlock (cut.before) || {type:['p'], data: cut.before}
               if (b) {
                 b.id =  _b[idx].id
                 _b[idx] = b 

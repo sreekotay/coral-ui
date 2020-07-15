@@ -490,7 +490,7 @@
     return range
   };
 
-  function setCurrentCursorPosition (inchars, el) {
+  function setCurrentCursorPosition (inchars, el, nofocus) {
     console.log('select ---------- SETCURPOS', inchars, el)
     if (inchars === null) inchars = {}
     var selection = window.getSelection()
@@ -519,7 +519,7 @@
       if (el.coral) el.coral.preserveSelection = true
       // }, 0)
     }
-    if (el && el !== document.activeElement && el.focus) {
+    if (!nofocus && el && el !== document.activeElement && el.focus) {
       if (0 && (typeof (inchars) !== 'object' || !inchars.fallback) && !chars.startNode) {
         var nel = findNextNode(el, '#text')
         if (nel && 1) {
@@ -624,16 +624,16 @@
     var l = el.innerText
     var b = []
     var y
-    var range = saveSelection()
+    var range = xs.get()
     for (var i = 0; i < l.length; i++) {
-      setCurrentCursorPosition(i, el)
+      setCurrentCursorPosition(i, el, true)
       var r = getSelectionCoords()
       if (all || y !== r.top) {
         y = r.top
         b.push(i)
       }
     }
-    restoreSelection(range)
+    xs.set(range)
     return b
   }
 
