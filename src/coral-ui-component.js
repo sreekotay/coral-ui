@@ -55,23 +55,23 @@ coral.ui.register('*cui-editor-js', {
 
 coral.ui.register('cui-hamburger', {
   state: {
-    always: false
+    always: false,
+    active: false
   },
   update: function () {
     if (!this.state.always) { this.rootEl.classList.add('cui-wide-hide') } else {
       this.emit('expand', { expandclass: 'cui-wide-always', expand: true })
       this.emit('expand', { expandclass: 'cui-wide-show', expand: false })
     }
-    this.html(0, '<button class="hamburger hamburger--vortex" style="padding:0" type="button">' +
+    this.html(0, '<button class="hamburger hamburger--vortex' + (this.state.active?' is-active':'') + '" style="padding:0" type="button">' +
                   '<span class="hamburger-box"><span class="hamburger-inner"></span></span>' +
                   '</button>')
   },
+  observers: {
+    active: function (a) { this.emit('expand', { expand:this.state.active }) }
+  },
   listeners: {
-    click: function (event) {
-      var el = this.rootEl.querySelector('.hamburger')
-      el.classList.toggle('is-active')
-      this.emit('expand', { expand: el.classList.contains('is-active') })
-    }
+    click: function (event) { this.state.active = !this.state.active }
   }
 })
 

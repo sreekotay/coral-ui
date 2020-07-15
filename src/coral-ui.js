@@ -19,10 +19,10 @@ function UIFactory (opts) {
         var dc = ('datactx' in _s) ? this.dot(_s.datactx).value : this
         var dl = ('datasrc' in _s) ? this.dot(_s.datasrc).value : this
         var gk = _s.genkey
-        if (Array.isArray(dl) && dl.length === 0) dl = null
+        if (Array.isArray(dl) && dl.length === 0 && dl.keys().length === 0) dl = null
         var gen = (dl && slot) || slots.empty || { text: '<div> </div>' }
         var key = _s.datakey; var uk
-        if (!Array.isArray(dl)) dl = [dl]
+        if (!Array.isArray(dl) && !_s.dataobj) dl = [dl]
         if (slots.header) this.html(-1, slots.header.script ? slots.header.script(dc) : slots.header.text)
         // var hm = this.__.hmap || {}; dc.__hmap__ = hm
         /*
@@ -33,7 +33,8 @@ function UIFactory (opts) {
         if (this.rootEl.classList.contains('tag-list'))
           this.name=this.name
         */
-        for (var i = 0; i < dl.length; i++) {
+        //for (var i = 0; i < dl.length; i++) {
+        for (var i in dl) {
           var t = typeof (dl[i])
           if (dl[i]) uk = key === undefined ? dl[i].__key__ : dl[i][key]
           if (gk && uk === undefined && t === 'object') uk = xs.privateprop(dl[i], '__key__', 'k' + rf_key++)
@@ -239,7 +240,7 @@ function UIFactory (opts) {
                 if (idx >= 0) args[idx] = event
               }
               var f = coral.dot(fn); var rval
-              if (f.value !== undefined) {
+              if (f.obj !== undefined) {
                 if (isfunction(f.value)) rval = f.value.apply(f.obj, args || [event])
                 else coral.dot(fn, args[0])
                 if (rval === 'stop' || ev.stop) return

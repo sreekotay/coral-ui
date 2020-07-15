@@ -63,7 +63,7 @@
   }
 
   function combinableEls (el1, el2) {
-    if (typeOfDOM(el1) !== 'inline' || el1.nodeName !== el2.nodeName) return false
+    if (typeOfDOM(el1) !== 'inline' || el1.nodeName !== el2.nodeName || el1.nodeName === 'BR') return false
     if (el1.children) { if (el1.children.length > 1 || (el1.firstChild && el1.firstChild.nodeType !== 3)) return false }
     if (el2.children) { if (el2.children.length > 1 || (el2.firstChild && el2.firstChild.nodeType !== 3)) return false }
     var a1 = el1.attributes
@@ -428,6 +428,7 @@
     if (n) while (n.firstChild && !matchNode(n, match)) n = n.firstChild
     return (n && match && !matchNode(n, match)) ? findNextNode(n, match) : n
   }
+  window.findNextNode = findNextNode
   function createRange (node, chars, range, looping) {
     if (!range) {
       range = document.createRange()
@@ -509,14 +510,14 @@
       selection.addRange(range)
     }
     if (inchars && inchars.els && inchars.els.length && el === inchars.el) {
-      setTimeout(function () {
+      //setTimeout(function () {
         var els = inchars.els
         var a = {}
         for (var i = 0; i < els.length; i++) a[els[i]] = true
         els = inchars.el.children
         for (var i = 0; i < els.length; i++) els[i].classList.toggle('selected', a[i] || false)
         if (el.coral) el.coral.preserveSelection = true
-      }, 0)
+      //}, 0)
     }
     if (el && el !== document.activeElement && el.focus) {
       if (0 && (typeof (inchars) !== 'object' || !inchars.fallback) && !chars.startNode) {

@@ -16,6 +16,9 @@
   align-items:center;
   justify-content: center;
 }
+.cui-align {
+  align-items:center;
+}
 
 .cui-pos {
   position: relative;

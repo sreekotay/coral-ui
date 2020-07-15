@@ -221,7 +221,7 @@
     var l = path.length
     for (var i = 0; i < l; i++) {
       var k = path[i]; var o = obj; obj = o[k]
-      if ((!obj || typeof (obj) !== 'object') && ((i + 1 < l) || (!(k in o)))) return { last: { obj: o, prop: k }, apply: doterror }
+      if ((!obj || typeof (obj) !== 'object') && ((i + 1 < l) || (false/*!(k in o)*/))) return { last: { obj: o, prop: k }, apply: doterror }
     }
     return { value: obj, obj: o, prop: k, apply: dotapply }
   }
