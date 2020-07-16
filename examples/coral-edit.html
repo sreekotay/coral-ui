@@ -48,7 +48,7 @@
     }
    
     function expandBlocks (barr, idx, cl) {
-      var narr = coral.ui.DOM.toBlock (cl)
+      var narr = coral.ui.DOM.toBlock (cl)//{items: coral.ui.DOM.toBlocks (cl, true)}
       if (narr.items) {
         narr = narr.items
         for (var i=0; i<narr.length; i++) barr.splice(idx+i, 0, narr[i])
@@ -208,7 +208,7 @@
             event.clipboardData.setData('text/html', h);
             console.log ('direct copy', h)
           } else {
-            var div = document.createElement('p')
+            var div = document.createElement('block')
             div.setAttribute ('style', 'position:fixed;opacity:0;')
             div.tabIndex = -1
             div.contentEditable = true
@@ -240,10 +240,11 @@
           var barr = this.state.blocks
           var bi = inidx || 0
           var diff 
-          var end = (inidx===undefined ? els.length : inidx+1)
-          for (var i=bi; i<end; i++) {
+          for (var i=bi; i<(inidx===undefined ? els.length : inidx+1); i++) {
+            if (!els[i]) continue
             var ch = els[i].firstChild
-            var elsch = ch.children; for (var n=0; n<elsch.length; n++) cleanNodes (elsch[n], true)
+            cleanNodes(ch, true)
+            //var elsch = ch.children; for (var n=0; n<elsch.length; n++) cleanNodes (elsch[n], true)
             var narr = coral.ui.DOM.toBlocks (ch)
             if (narr) {
               for (var n=0; n<narr.length; n++) {
@@ -266,7 +267,7 @@
                   } 
                 }
               }
-            } 
+            }
             bi++
           }
           if (barr.length !== bi && inidx === undefined) {
@@ -308,6 +309,9 @@
         }
       },
       listeners: {
+        "dragstart.local": function (event) {
+          event.preventDefault()
+        },
         "focus.local": function(event) {
           console.log ('focus', event.target)
           return
@@ -317,7 +321,9 @@
           return
         },
         "click": function(event) {
-          console.log ('click', event.target)
+          console.log ('click', event.target, 'focus:', document.activeElement)
+          if(!this.preserveSelection && !this.rootEl.contains( document.activeElement))
+            coral.ui.select.set(0, event.target)
           return
         },
         //input: function (event) { this.methods.readFromDOM (false, getChildIndexRoot(this.rootEl, event.target).idx); globalUndoer.push() },
@@ -331,17 +337,22 @@
           var _b = this.state.blocks
           var key = event.key || event.keyCode
           event.code = event.code || ('Key' + event.key.toUpperCase())
-          if ((event.code==='Enter' || key==='Enter') && !event.shiftKey && 1) {
+          if (key==='Enter' && !event.shiftKey) {
             event.preventDefault()
             var idx = cinfo.idx
             var b = _b[idx] = _b[idx] || {}
             var cel = cinfo.el.children[0]
-            var cut = extractHTML (cel.firstChild || cel)
+            cel = cel.firstChild || cel
+            var cut = extractHTML (cel)
             console.log ('extract', cut)
             if (cut) {
               var text = coral.ui.DOM.toBlock (cut.after) || {type:['p'], data: cut.after}
               if (cut.before && text.type[0]!=='p') text.type = ['p']
-              b = coral.ui.DOM.toBlock (cut.before) || {type:['p'], data: cut.before}
+              if (cut.before) {
+                var be = cel.cloneNode(false)
+                be.innerHTML = cut.before
+                b = coral.ui.DOM.toBlock (be) || {type:['p'], data: cut.before}
+              } else b = {type:['p'], data: cut.before}
               if (b) {
                 b.id =  _b[idx].id
                 _b[idx] = b 
@@ -357,7 +368,7 @@
             this.render_()
             selectAndFocus (this, idx + 1)
           }
-          if (event.code==='Backspace') {
+          if (key==='Backspace') {
             var pos = coral.ui.select.get (cinfo.el)
             if (pos.start >= pos.end - 1 && pos.start === 0 && cinfo.idx>0) {
               event.preventDefault()
@@ -510,14 +521,14 @@
           console.log ('undo ---- clearing unnecessary block: ', block)
           var sels = this.rootEl.querySelectorAll('.selected')
           if (sels.length) {
-            var idx
+            var idx, nidx
             var idx = getChildIndexRoot (this.rootEl, sels[0]).idx
             this.methods.clearselectedrows()
             //this.state.blocks.splice (idx, 0, {data: ''})
             if (inel) 
-              var nidx = expandBlocks (this.state.blocks, idx, inel)
-              this.render_()
-              selectAndFocus (this, nidx, 0)
+              nidx = expandBlocks (this.state.blocks, idx, inel)
+            this.render_()
+            if (nidx !== undefined) selectAndFocus (this, nidx, 0)
             //if (!this.state.blocks[idx].data) this.state.blocks.splice (idx, 1)
           } else {
             document.execCommand('insertHTML', false, (inel && inel.innerHTML) || text);
@@ -525,20 +536,45 @@
           }
         },
         
-        "mousedown.local": function(event) { 
+        "pointerdown": function(event) { 
+          console.log (event, 'mouse')
           this.data.mousedown = getChildIndexRoot(this.rootEl, event.target) 
+          if (this.data.drag) this.data.drag.end()
+          this.data.drag = startDrag(event.clientX, event.clientY)
+          var cinfo =  getChildIndexRoot(this.rootEl, event.target)
+          this.data.drag.target = cinfo.el
+          if (!this.data.drag.target) {
+            this.data.drag.moving = true
+            event.target.setPointerCapture (event.pointerId)
+          }
+          //event.preventDefault()
         },
-        "mouseup.local": function(event) { 
+        "pointerup": function(event) { 
           var els = this.rootEl.querySelectorAll('.selected')
           if (els.length) {
             this.preserveSelection = true
             coral.ui.select.set({start:0, end:-1}, els[0])
           }
           this.data.mousedown = null 
+          if (this.data.drag) this.data.drag = this.data.drag.end()
+          event.target.releasePointerCapture (event.pointerId)
+          if(!this.preserveSelection && !this.rootEl.contains( document.activeElement))
+            coral.ui.select.set(0, this.rootEl)
+          //event.preventDefault()
+
         },
-        "mousemove.local": function(event) {
-          if (!this.data.mousedown) return 
+        "pointermove": function(event) {
           var cinfo = getChildIndexRoot(this.rootEl, event.target)
+          if (cinfo.idx>=0 && this.data.drag && cinfo.el!==this.data.drag.target) {
+            this.data.drag.moving = true
+            event.target.setPointerCapture (event.pointerId)
+          }
+          if (this.data.drag && this.data.drag.moving) this.data.drag.move(event.clientX, event.clientY)
+          if (!this.data.mousedown) return 
+          //event.preventDefault()
+          var target = document.elementFromPoint (event.clientX, event.clientY)
+          var cinfo = getChildIndexRoot(this.rootEl, target)
+          if (cinfo.idx<0) return
           if (cinfo.el !== this.data.mousedown.el || cinfo.el === this.data.mousedown.anchor ) {
             this.data.mousedown.anchor = this.data.mousedown.el
             var range = window.getSelection()
@@ -550,7 +586,15 @@
           }
 
         },
-        "mouseleave.local": function(event) {
+        "pointerout": function(event) {
+          return
+          console.log ("pointerleave", event)
+          if (!this.data.drag) return
+          console.log ("leavning", event.target)
+          if (event.target===this.data.drag.target) {
+            this.data.drag.moving = true
+            event.target.setPointerCapture (event.pointerId)
+          }
           return
           var cinfo = getChildIndexRoot(this.rootEl, event.target)
           var range = window.getSelection()
@@ -620,6 +664,7 @@
         return node instanceof Element && node.classList.contains('container');
       };
       const s = window.getSelection();
+      if (0)
       for (var i=0; i<uis.length; i++) {
         var root = uis[i].rootEl
         var start = getChildIndexRoot(root, s.anchorNode)

@@ -7,6 +7,30 @@ function generateUID () {
   secondPart = ('000' + secondPart.toString(36)).slice(-3)
   return firstPart + secondPart
 }
+
+function startDrag (sx, sy) {
+  var o = { sx: sx, sy: sy, el: document.createElement('div') }
+  var s = {}
+  o.el.setAttribute('style', 'position:fixed; z-index:1000; background-color:rgba(0,0,0,0.3); pointer-events:null')
+  document.body.appendChild(o.el)
+  o.move = function (x, y) {
+    s = {
+      left: Math.min(x, sx) + 'px',
+      width: Math.abs(x - sx) + 'px',
+      top: Math.min(y, sy) + 'px',
+      height: Math.abs(y - sy) + 'px'
+    }
+    coral.dot.keysApply(o.el.style, s)
+    return o
+  }
+  o.end = function () {
+    o.el.parentNode.removeChild(o.el)
+  }
+  o.rect = s
+  o.move(sx, sy)
+  return o
+}
+
 var toPX = (function () {
   var PIXELS_PER_INCH = 96
 
@@ -280,7 +304,7 @@ function Undoer (rootEl) {
       patchRedo.selection = priordoc.selection = coral.ui.select.get(rootEl)
       patchUndo.state = patchRedo.state = funcs.state.bind(this)
       stack.execute(new EditCommand(rootEl, patchUndo, patchRedo))
-      //priordoc =  jsonpatch.deepClone(rootEl.coral.state.blocks)
+      // priordoc =  jsonpatch.deepClone(rootEl.coral.state.blocks)
       jsonpatch.applyPatch(priordoc, jsonpatch.deepClone(patchRedo))
       console.timeEnd()
       console.log('undo ---- captured')
@@ -292,7 +316,7 @@ function Undoer (rootEl) {
           mutations[0].addedNodes.length === mutations[1].removedNodes.length && mutations[1].removedNodes.length === 1 &&
           mutations[0].addedNodes[0] === mutations[1].removedNodes[0]) { return }
     }
-   //console.log('UNDO ---- react', mutations)
+    // console.log('UNDO ---- react', mutations)
     if (EditCommand.blocked) {
       console.log('undo ---- blocked undo capture')
       if (EditCommand.blocked === true) EditCommand.blocked = false
@@ -334,8 +358,6 @@ function Undoer (rootEl) {
   return funcs
 }
 
-
-
 let candidateSelectors = [
   'input',
   'select',
@@ -345,169 +367,167 @@ let candidateSelectors = [
   '[tabindex]',
   'audio[controls]',
   'video[controls]',
-  '[contenteditable]:not([contenteditable="false"])',
-];
-let candidateSelector = candidateSelectors.join(',');
+  '[contenteditable]:not([contenteditable="false"])'
+]
+let candidateSelector = candidateSelectors.join(',')
 
 let matches =
   typeof Element === 'undefined'
-    ? function() {}
+    ? function () {}
     : Element.prototype.matches ||
       Element.prototype.msMatchesSelector ||
-      Element.prototype.webkitMatchesSelector;
+      Element.prototype.webkitMatchesSelector
 
-function tabbable(el, options) {
-  options = options || {};
+function tabbable (el, options) {
+  options = options || {}
 
-  let regularTabbables = [];
-  let orderedTabbables = [];
+  let regularTabbables = []
+  let orderedTabbables = []
 
-  let candidates = el.querySelectorAll(candidateSelector);
+  let candidates = el.querySelectorAll(candidateSelector)
 
   if (options.includeContainer) {
     if (matches.call(el, candidateSelector)) {
-      candidates = Array.prototype.slice.apply(candidates);
-      candidates.unshift(el);
+      candidates = Array.prototype.slice.apply(candidates)
+      candidates.unshift(el)
     }
   }
 
-  let candidate;
-  let candidateTabindex;
+  let candidate
+  let candidateTabindex
   for (let i = 0; i < candidates.length; i++) {
-    candidate = candidates[i];
+    candidate = candidates[i]
 
     if (!isNodeMatchingSelectorTabbable(candidate)) {
-      continue;
+      continue
     }
 
-    candidateTabindex = getTabindex(candidate);
+    candidateTabindex = getTabindex(candidate)
     if (candidateTabindex === 0) {
-      regularTabbables.push(candidate);
+      regularTabbables.push(candidate)
     } else {
       orderedTabbables.push({
         documentOrder: i,
         tabIndex: candidateTabindex,
-        node: candidate,
-      });
+        node: candidate
+      })
     }
   }
 
   let tabbableNodes = orderedTabbables
     .sort(sortOrderedTabbables)
     .map(a => a.node)
-    .concat(regularTabbables);
+    .concat(regularTabbables)
 
-  return tabbableNodes;
+  return tabbableNodes
 }
 
-tabbable.isTabbable = isTabbable;
-tabbable.isFocusable = isFocusable;
+tabbable.isTabbable = isTabbable
+tabbable.isFocusable = isFocusable
 
-function isNodeMatchingSelectorTabbable(node) {
+function isNodeMatchingSelectorTabbable (node) {
   if (
     !isNodeMatchingSelectorFocusable(node) ||
     isNonTabbableRadio(node) ||
     getTabindex(node) < 0
   ) {
-    return false;
+    return false
   }
-  return true;
+  return true
 }
 
-function isTabbable(node) {
+function isTabbable (node) {
   if (!node) {
-    throw new Error('No node provided');
+    throw new Error('No node provided')
   }
   if (matches.call(node, candidateSelector) === false) {
-    return false;
+    return false
   }
-  return isNodeMatchingSelectorTabbable(node);
+  return isNodeMatchingSelectorTabbable(node)
 }
 
-function isNodeMatchingSelectorFocusable(node) {
+function isNodeMatchingSelectorFocusable (node) {
   if (node.disabled || isHiddenInput(node) || isHidden(node)) {
-    return false;
+    return false
   }
-  return true;
+  return true
 }
 
-let focusableCandidateSelector = candidateSelectors.concat('iframe').join(',');
-function isFocusable(node) {
+let focusableCandidateSelector = candidateSelectors.concat('iframe').join(',')
+function isFocusable (node) {
   if (!node) {
-    throw new Error('No node provided');
+    throw new Error('No node provided')
   }
   if (matches.call(node, focusableCandidateSelector) === false) {
-    return false;
+    return false
   }
-  return isNodeMatchingSelectorFocusable(node);
+  return isNodeMatchingSelectorFocusable(node)
 }
 
-function getTabindex(node) {
-  let tabindexAttr = parseInt(node.getAttribute('tabindex'), 10);
+function getTabindex (node) {
+  let tabindexAttr = parseInt(node.getAttribute('tabindex'), 10)
   if (!isNaN(tabindexAttr)) {
-    return tabindexAttr;
+    return tabindexAttr
   }
   // Browsers do not return `tabIndex` correctly for contentEditable nodes;
   // so if they don't have a tabindex attribute specifically set, assume it's 0.
   if (isContentEditable(node)) {
-    return 0;
+    return 0
   }
-  return node.tabIndex;
+  return node.tabIndex
 }
 
-function sortOrderedTabbables(a, b) {
+function sortOrderedTabbables (a, b) {
   return a.tabIndex === b.tabIndex
     ? a.documentOrder - b.documentOrder
-    : a.tabIndex - b.tabIndex;
+    : a.tabIndex - b.tabIndex
 }
 
-function isContentEditable(node) {
-  return node.contentEditable === 'true';
+function isContentEditable (node) {
+  return node.contentEditable === 'true'
 }
 
-function isInput(node) {
-  return node.tagName === 'INPUT';
+function isInput (node) {
+  return node.tagName === 'INPUT'
 }
 
-function isHiddenInput(node) {
-  return isInput(node) && node.type === 'hidden';
+function isHiddenInput (node) {
+  return isInput(node) && node.type === 'hidden'
 }
 
-function isRadio(node) {
-  return isInput(node) && node.type === 'radio';
+function isRadio (node) {
+  return isInput(node) && node.type === 'radio'
 }
 
-function isNonTabbableRadio(node) {
-  return isRadio(node) && !isTabbableRadio(node);
+function isNonTabbableRadio (node) {
+  return isRadio(node) && !isTabbableRadio(node)
 }
 
-function getCheckedRadio(nodes) {
+function getCheckedRadio (nodes) {
   for (let i = 0; i < nodes.length; i++) {
     if (nodes[i].checked) {
-      return nodes[i];
+      return nodes[i]
     }
   }
 }
 
-function isTabbableRadio(node) {
+function isTabbableRadio (node) {
   if (!node.name) {
-    return true;
+    return true
   }
   // This won't account for the edge case where you have radio groups with the same
   // in separate forms on the same page.
   let radioSet = node.ownerDocument.querySelectorAll(
     'input[type="radio"][name="' + node.name + '"]'
-  );
-  let checked = getCheckedRadio(radioSet);
-  return !checked || checked === node;
+  )
+  let checked = getCheckedRadio(radioSet)
+  return !checked || checked === node
 }
 
-function isHidden(node) {
+function isHidden (node) {
   // offsetParent being null will allow detecting cases where an element is invisible or inside an invisible element,
   // as long as the element does not use position: fixed. For them, their visibility has to be checked directly as well.
   return (
     node.offsetParent === null || getComputedStyle(node).visibility === 'hidden'
-  );
+  )
 }
-
-tabbable;

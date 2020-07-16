@@ -1,3 +1,4 @@
+
 // ======================================================================
 // coral.ui.DOM
 // ======================================================================
@@ -6,10 +7,10 @@
   function cedType (el) { return el.getAttribute && el.getAttribute('coral-blox') }
   function typeOfDOM (el) { return (el && cedType(el)) || (!el || (inlinetag[el.nodeName]) ? 'inline' : el.nodeName) }
   function insertAfter (newNode, existingNode) { existingNode.parentNode.insertBefore(newNode, existingNode.nextSibling) }
-  function flatterDOM (rootEl, p, keepAttributes) {
-    if (keepAttributes && rootEl.hasAttribute && rootEl.hasAttribute('coral-editor')) {
+  function flatterDOM (rootEl, p, opts) {
+    if (1 && opts.keepAttributes && rootEl.hasAttribute && rootEl.hasAttribute('coral-editor')) { // skip it
       var els = rootEl.childNodes
-      for (var i = 0; i < els.length; i++) flatterDOM(els[i], rootEl, keepAttributes)
+      for (var i = 0; i < els.length; i++) flatterDOM(els[i], rootEl, opts)
       return
     }
 
@@ -25,13 +26,11 @@
       var et = typeOfDOM(el)
       if (literaltags[et]) continue
       if (!type) type = et
-      if (el.firstChild) flatterDOM(el, nestedtag[el.nodeName] ? rootEl : (p || rootEl), keepAttributes)
-      // if (ep && ep.nodeType === 3 && el.nodeType === 3) {
+      if (el.firstChild) flatterDOM(el, nestedtag[el.nodeName] ? null : (p || rootEl), opts)
       if (ep && combinableEls(ep, el)) {
         ep.textContent += el.textContent
-        i--
         rootEl.removeChild(el)
-        el = ep
+        i--; el = ep // rewind
         continue
       }
       var split = (et !== 'inline' || type === 'inline') && et !== type && !ctag[et]
@@ -75,21 +74,25 @@
     return true
   }
 
-  function cleanDOM (rootEl, keepAttributes) {
-    var els = rootEl.childNodes; if (!els) return
+  function cleanDOM (rootEl, opts) {
+    if (!rootEl || !rootEl.childNodes) {
+      debugger
+      return
+    }
+    var els = rootEl.childNodes
     var modified = false
     for (var i = els.length - 1; i >= 0; i--) {
       var el = els[i]
       // if (keepAttributes && el.hasAttribute && el.hasAttribute('coral-editor')) continue
-      if (el.firstChild) modified = cleanDOM(el, keepAttributes) || modified
-      modified = (!!transformNode(el, keepAttributes)) || modified
+      if (el.firstChild) modified = cleanDOM(el, opts) || modified
+      modified = (!!transformNode(el, opts)) || modified
     }
     return modified
   }
 
   function getBlockFromDOM (rootEl, depth) {
     if (!rootEl) return null
-    if (typeof (rootEl) === 'string') { var d = document.createElement('div'); d.innerHTML = rootEl; rootEl = d }
+    if (typeof (rootEl) === 'string') { var d = document.createElement('p'); d.innerHTML = rootEl; rootEl = d }
     var b = b || { }
     if (rootEl.nodeType !== 3) {
       b.type = // [typeOfDOM(rootEl).toLowerCase()]
@@ -103,6 +106,7 @@
 
     depth = depth || 0
     if (b.type && b.type[0] === 'br' && depth === 0) { b.type = ['p']; b.data = '\n'; return b }
+    if (b.type && b.type[0] === 'span' && depth === 0) { b.type = ['p'] }
 
     var els = rootEl.childNodes
     getAttributesFromDOM(rootEl, b)
@@ -115,7 +119,6 @@
           typeOfDOM(els[i]) === 'inline' && t === 'inline') { // combine children
         for (var k in ib) {
           if (k === 'type') {
-            // b[k] = b[k].concat(ib[k])
             for (var kk in ib[k]) {
               var tt = ib[k][kk]
               if (b[k].indexOf(tt) < 0) b[k].push(tt)
@@ -128,18 +131,43 @@
       iarr[i] = ib
     }
     if ((b.items && b.data) || !b.data) delete b.data
-    // if (!b.type) b.type = 'span'
     return b
   }
 
-  function getArrayFromDOM (rootEl, doNodes) {
+  function getArrayFromDOM (rootEl, doNodes, depth) {
+    depth = (depth || 0) + 1
     if (typeof (rootEl) === 'string') { var d = document.createElement('div'); d.innerHTML = rootEl; rootEl = d }
     var arr = arr || []
-    var els = doNodes ? rootEl.childNodes : rootEl.children
+    var els = rootEl.childNodes//doNodes ? rootEl.childNodes : rootEl.children
     if (!els) return arr
+    var pb
+    var pel
     for (var i = 0; i < els.length; i++) {
-      var b = getBlockFromDOM(els[i])
-      arr[i] = b
+      var el = els[i]
+      if (!doNodes && el.nodeType === 3 && !el.textContent.trim()) continue
+      var b = getBlockFromDOM(el, depth)
+      if (b.type && !inlinetag[b.type[0].toUpperCase()]) {
+        pb = null
+        arr.push(b)
+      } else {
+        if (!pb) {
+          pb = b
+          if (!pb.items) {
+            pel = document.createElement('p')
+            rootEl.insertBefore(pel, el)
+            pel.append(el)
+            pb = {
+              type: ['p'],
+              items: []
+            }
+          }
+          arr.push(pb)
+        } else {
+          pel.append(el)
+          i--
+        }
+        pb.items.push(b)
+      }
     }
     return arr
   }
@@ -223,7 +251,7 @@
     var attr = el.attributes
     for (var i = attr.length - 1; i >= 0; i--) {
       var name = attr[i].name
-      if (attrok[name]) continue
+      if (attrok[name] && name !== 'width') continue
       if (name.indexOf('coral-editor-') >= 0) continue
       el.removeAttribute(name)
     }
@@ -239,7 +267,7 @@
     return d
   }
 
-  function transformNode (el, keepAttributes) {
+  function transformNode (el, opts) {
     var en = el.nodeName
     var gcs = el.hasAttribute && el.hasAttribute('style') ? el.style : null // window.getComputedStyle(el) : null
     var invis = gcs && (gcs.display === 'none' || gcs.visibility === 'hidden' || parseFloat(gcs.opacity) <= 0.01)
@@ -247,9 +275,9 @@
     var empty = (!inlinetag[en] && !emptyok[en] && !tc)
     var nonempty = el.firstChild && ((el.firstChild.innerHTML && el.firstChild.innerHTML.trim()) || emptyok[el.firstChild.nodeName])
     empty = empty || (!inlinetag[en] && en !== 'P' && !el.textContent.trim()) || (el.nodeType === 3 && !el.textContent.trim() && !el.parentNode.nextSibling && !el.parentNode.previouSibling)
-    var remove = deletetag[en] || ((!nonempty || nonempty === '&nbsp;') && empty && !emptyok[en] && !voidtags[en.toLowerCase()] && !el.nodeValue && (!keepAttributes || en !== 'P')) // empty or one we don't want
+    var remove = deletetag[en] || ((!nonempty || nonempty === '&nbsp;') && empty && !emptyok[en] && !voidtags[en.toLowerCase()] && !el.nodeValue && (!opts.keepAttributes || en !== 'P')) // empty or one we don't want
     remove = remove || (el.classList && el.classList.contains('Apple-interchange-newline'))
-    if (invis || remove) {
+    if (invis || remove || (opts.inlineOnly && !inlinetag[en])) {
       el.parentNode.removeChild(el)
       return
     }
@@ -260,7 +288,7 @@
     else if (en === 'I' || (en !== 'A' && inlinetag[en] && gcs && gcs.fontStyle == 'italic')) nel = swapNode(el, 'em')
     else if (el.nodeType !== 3 && !tagok[en] && !elemtags[cedType(el)] &&
              !ctag[en] && !custcontains[en]) nel = swapNode(el, 'p')
-    if (!keepAttributes) removeAllAttributes(nel || el)
+    if (!opts.keepAttributes) removeAllAttributes(nel || el)
     return nel
   }
   function copyAttributesFromEl (b, el, warray) {
@@ -297,7 +325,7 @@
       toHTML: function (b, edit) {
         return '<div coral-blox=cui-ed-image><img ' + this.attrString(b, ['src', 'width', 'height']) + '>' +
                '<p coral-editor-src class="cui-editor-focus" contenteditable=true>' + this.esc(b.src || '') + '</p>' +
-               '<div coral-editor-controls contenteditable=true>' + // <input class="cui-editor-focus">' +
+               '<div coral-editor coral-editor-controls contenteditable=true>' + // <input class="cui-editor-focus">' +
                this.toHTML(b.caption, 2) + '</div></div>'
       },
       toBlock: function (rootEl, b) {
@@ -307,9 +335,8 @@
         copyAttributesFromEl(b, img, ['src', 'width', 'height'])
         if (input && input.textContent) img.src = input.textContent
         if (caption) {
-          var capel = caption
-          coral.ui.DOM.clean(capel, true)
-          b.caption = this.toBlocks(capel, true)
+          coral.ui.DOM.clean(caption, { keepAttributes: true })
+          b.caption = this.toBlocks(caption, true, 1)
         }
         return b
       }
@@ -332,8 +359,8 @@
     OL_: { LI: true },
     UL_: { LI: true },
     THEAD: { TR: true, TD: true, TH: true },
-    TABLE: { THEAD: true, TR: true, TBODY: true },
-    TBODY: { TR: true, TD: true, TH: true },
+    TABLE_: { THEAD: true, TR: true, TBODY: true },
+    TBODY_: { TR: true, TD: true, TH: true },
     TD: { LI: true, P: true, OL: true, UL: true },
     TH: { TD: true },
     TR: { TH: true, TD: true },
@@ -341,10 +368,11 @@
     BLOCKQUOTE: { P: true }
   }
 
-  xs.clean = function (el, keepAttributes, verb) {
-    var ret = (!verb || verb == 'clean') && cleanDOM(el, keepAttributes)
-    if (!verb || verb == 'flatten') flatterDOM(el, null, keepAttributes)
-    return ((!verb || verb == 'clean') && cleanDOM(el, keepAttributes)) || ret
+  xs.clean = function (el, opts, verb) {
+    if (typeof (opts) !== 'object') opts = { keepAttributes: opts }
+    var ret = (!verb || verb == 'clean') && cleanDOM(el, opts)
+    if (!verb || verb == 'flatten') flatterDOM(el, null, opts)
+    return ((!verb || verb == 'clean') && cleanDOM(el, opts)) || ret
   }
   xs.toBlock = getBlockFromDOM
   xs.toBlocks = getArrayFromDOM
@@ -441,6 +469,7 @@
       if (!node) {
         debugger
       }
+      if (node.nodeType !== 3 && chars.firstText) { node = findNextNode(node, '#text') || node }
       range.selectNode(node)
       range.setStart(node, chars.start)
       chars.start = -1

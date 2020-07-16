@@ -467,6 +467,7 @@ function UIFactory (opts) {
       case '^':
         refobj = rf.rootEl
         var which = sel.substring(1) | 0; while (which--) refObj = refObj.parentElement
+        refobj = refobj && refobj.coral
         if (!refobj) coralError('unable to find parent to state bind', rf, proppath)
         sp = realizeSource(refobj, copyprop)
         break
@@ -802,7 +803,7 @@ function UIFactory (opts) {
       ha[idx] = hc // set the position
       if (hc.el && !hc.el.parentNode) hc.el = null
       if (hc.el && hc.hsh === hsh && !force && !hc.el.__coral_dirty__) return
-      if (hc.el.__coral_dirty__) delete hc.el.__coral_dirty__
+      if (hc.el && hc.el.__coral_dirty__) delete hc.el.__coral_dirty__
       hc.h = ha.htmlIdx++
       ha.html += htmlGen
       hc.hsh = hsh

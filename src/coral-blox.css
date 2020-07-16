@@ -40,6 +40,7 @@ body {
 
 .cui-editor-item {
   padding: 4px 8px;
+  overflow: auto;
 }
 .cui-editor-h1 *,
 .cui-editor-h2 *,
@@ -116,5 +117,9 @@ body {
     _outline: 1px dashed rgba(0,0,0, 0.4);
     _background-color: red;//rgba(255, 226, 65, 0.06);
     _border: 1px dashed rgba(255, 226, 65, 0.8);
+}
+
+[coral-editor-src] {
+  color: red;
 }
 
