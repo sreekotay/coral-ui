@@ -242,9 +242,8 @@
           var diff 
           var end = (inidx===undefined ? els.length : inidx+1)
           for (var i=bi; i<end; i++) {
-            if (!els[i]) continue
-            if (els[i].firstChild) cleanNodes (els[i].firstChild, true)
             var ch = els[i].firstChild
+            var elsch = ch.children; for (var n=0; n<elsch.length; n++) cleanNodes (elsch[n], true)
             var narr = coral.ui.DOM.toBlocks (ch)
             if (narr) {
               for (var n=0; n<narr.length; n++) {
