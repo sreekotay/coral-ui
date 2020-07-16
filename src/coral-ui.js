@@ -945,9 +945,9 @@ window.coral.ui = UIFactory({ autorun: true })
 // ============================================
 ;(function () {
   var coral = window.coral = window.coral || {}; coral.ui = coral.ui || {}
-  coral.ui.loadScript = function (url, cb) {
+  coral.ui.loadScript = function (url, cb, asCSS) {
     if (document.querySelector('script[url="' + (url) + '"]')) { if (cb) cb(true); return }
-    if (url.endsWidth('css')) {
+    if (asCSS) {
       var s = document.createElement('link')
       s.setAttribute('rel', 'stylesheet')
       s.setAttribute('type', 'text/css')
