@@ -138,7 +138,7 @@
     depth = (depth || 0) + 1
     if (typeof (rootEl) === 'string') { var d = document.createElement('div'); d.innerHTML = rootEl; rootEl = d }
     var arr = arr || []
-    var els = rootEl.childNodes//doNodes ? rootEl.childNodes : rootEl.children
+    var els = rootEl.childNodes// doNodes ? rootEl.childNodes : rootEl.children
     if (!els) return arr
     var pb
     var pel
@@ -324,7 +324,7 @@
       attr: { src: true, width: true, height: true, caption: true },
       toHTML: function (b, edit) {
         return '<div coral-blox=cui-ed-image><img ' + this.attrString(b, ['src', 'width', 'height']) + '>' +
-               '<p coral-editor-src class="cui-editor-focus" contenteditable=true>' + this.esc(b.src || '') + '</p>' +
+               '<p coral-editor-src class="cui-editor-focus_" contenteditable=true>' + this.esc(b.src || '') + '</p>' +
                '<div coral-editor coral-editor-controls contenteditable=true>' + // <input class="cui-editor-focus">' +
                this.toHTML(b.caption, 2) + '</div></div>'
       },
@@ -444,11 +444,12 @@
   }
 
   function matchNode (node, match) { return node === match || node.nodeName === match }
-  function findNextNode (node, match) {
+  function findNextNode (node, match, parent) {
     var n = node
     if (matchNode(n, match)) return n
     if (!n.firstChild) {
       do {
+        if (n === parent) return null
         if (n.nextSibling) { n = n.nextSibling; break }
         n = n.parentNode
       } while (n && !matchNode(n, match))
@@ -673,3 +674,217 @@
   xs.match = getMatchRange
   xs.breaks = getLineBreaks
 })(this)
+
+function drawRects (rrArr) {
+  var el = drawRects.el
+  if (!el) {
+    el = drawRects.el = document.createElement('div')
+    el.setAttribute('style', 'position:absolute; background-color:rgba(255,255,0,0.5); top:0; left:0;z-index:1000; pointer-events:none')
+    document.body.appendChild(el)
+  }
+
+  el.innerHTML = ''
+  for (var i = 0; i < rrArr.length; i++) {
+    var rr = rrArr[i].rect || rrArr[i]
+    var rel = el.cloneNode(false)
+    rel.style.top = rr.top + 'px'
+    rel.style.height = (rr.bottom - rr.top) + 'px'
+    rel.style.left = rr.left + 'px'
+    rel.style.width = (rr.right - rr.left) + 'px'
+    el.appendChild(rel)
+  }
+}
+
+function UISelect (el, start, end) {
+  this.el = el
+  this.count = 0
+  this.rects = []
+  if (start !== undefined) {
+    this.start = start
+    this.end = end === undefined ? start : end
+  }
+  return this
+}
+
+UISelect.prototype.addRect = function (rr, idx, offset, node) {
+  var info = this
+  if (rr) {
+    rr = {
+      left: rr.left + window.pageXOffset,
+      top: rr.top + window.pageYOffset,
+      right: rr.right + window.pageXOffset,
+      bottom: rr.bottom + window.pageYOffset
+    }
+  }
+  if (!info.breaks) {
+    info.breaks = []
+    info.rr = rr
+  } else {
+    if (!rr || rr.top >= info.rr.bottom - 1 || rr.right < info.rr.left) {
+      var il = info.breaks.length
+      var midbreak = false
+      var pb = il && info.breaks[il - 1]
+      if (node && pb && pb.node === node) { midbreak = true }
+      info.breaks.push({ rect: info.rr, offset: offset, idx: idx, midbreak: midbreak, node: info.rects.node, line: info.breaks.length })
+      info.rr = coral.assign({}, rr)
+      if (!rr) return
+    }
+    info.rr.top = Math.min(rr.top, info.rr.top)
+    info.rr.bottom = Math.max(rr.bottom, info.rr.bottom)
+    info.rr.left = Math.min(rr.left, info.rr.left)
+    info.rr.right = Math.max(rr.right, info.rr.right)
+  }
+  info.rects.node = node
+  info.rects.push({ idx: idx, node: node, offset: offset, rect: rr })
+}
+
+UISelect.prototype.charFromPoint = function (x, y) {
+  var rrArr = (x === undefined && this.breaks) ? this.breaks : this.rects
+  for (var i = rrArr.length - 1; i >= 0; i--) {
+    var rr = rrArr[i].rect
+    if ((x === undefined || (x >= rr.left && x < rr.right)) &&
+        (y === undefined || (y >= rr.top && y < rr.bottom))) return rrArr[i]
+  }
+  return null
+}
+
+function testRange (node, info) {
+  var first = !info
+  info = info || new UISelect(node)
+  info.range = info.range || document.createRange()
+  if (!node) return
+
+  if (node.nodeType === Node.TEXT_NODE) {
+    var tcl = node.textContent.length
+    for (var i = 0; i < tcl; i++) {
+      info.range.setStart(node, i)
+      info.range.setEnd(node, i + 1)
+      /* if (i < tc.length - 2) info.range.setEnd(node, i + 1)
+      else info.range.setEnd(findNextNode(node), 0) */
+      var rr = info.range.getBoundingClientRect()
+      rr.el = node
+      info.addRect(rr, info.count + i, i, node)
+    }
+    info.count += tcl
+  } else {
+    var els = node.childNodes
+    if (els && els.length) {
+      for (i = 0; i < els.length; i++) testRange(els[i], info)
+    } else {
+      info.range.setStart(node, 0)
+      info.range.setEnd(findNextNode(node), 0)
+      // info.range.setEnd(node, 1)
+      rr = node.getBoundingClientRect()
+      rr.el = node
+      info.addRect(rr, info.count, 0, node)
+    }
+  }
+  if (first) info.addRect(null, info.count, 0)
+  return info
+}
+
+function nodeMatch (node, match, info) {
+  // return node
+  if (!match) return node
+  var n = node
+  while (n !== match && n) n = findNextNode(node, match, info.el)
+  return n || node
+}
+
+function selectRange (node, start, end, select, match) {
+  var uis = new UISelect(node, start, end)
+  if (select === 2) uis.select = true
+  uis.matchStart = match
+  var range = setRange(node, uis)
+  if (range && select) {
+    document.getSelection().removeAllRanges()
+    document.getSelection().addRange(range.range)
+    var n = range.startNode
+    while (n && !n.focus) n = n.parentNode
+    if (n) n.focus()
+  }
+  return range
+}
+
+function setRange (node, info) {
+  var first = !info.range
+  info.range = info.range || document.createRange()
+  if (!node) return
+
+  if ((info.select && (!node.childNodes || !node.childNodes.length)) || node.nodeType === Node.TEXT_NODE) {
+    var tcl = node.textContent.length
+    var nc = info.count + tcl
+    if (!info.startNode && nc >= info.start) {
+      info.startOffset = info.start - info.count
+      info.startNode = nodeMatch(node, info.startOffset === tcl && info.matchStart, info)
+      if (info.startNode !== node) info.startOffset = 0
+    }
+    if (info.startNode && !info.endNode && nc >= info.end) {
+      if (info.select) {
+        while (!node.textContent && info.start === info.end) { node = findNextNode(node, null, info.el) || node }
+      }
+      info.endOffset = info.end - info.count
+      info.endNode = nodeMatch(node, info.endOffset === tcl && (info.matchEnd || info.matchStart), info)
+      if (info.endNode !== node) info.endOffset = 0
+    }
+    info.count = nc
+  }
+
+  if (1) {
+    var els = node.childNodes
+    if (els && els.length) {
+      for (var i = 0; i < els.length; i++) setRange(els[i], info)
+    } else {
+    }
+  }
+
+  if (first) {
+    if (!info.startNode) info.startNode = node
+    if (!info.endNode) info.endNode = findNextNode(node)
+    info.range.selectNode(info.startNode)
+    info.range.setStart(info.startNode, info.startOffset || 0)
+    info.range.setEnd(info.endNode, info.endOffset || 0)
+  }
+  return info
+}
+
+function trange () {
+  trange.tr = testRange(coral.ui.find('*').rootEl)
+  // drawRects(trange.tr.breaks)
+  return trange.tr
+}
+
+function testSetSelection(tr,x, y) {
+  var rout = tr.charFromPoint(x, y) || tr.charFromPoint(undefined, y)
+  if (!rout) return 
+  
+    // console.log(rout.node)
+  drawRects([rout])
+  var adder = x < (rout.rect.left + rout.rect.right) / 2 ? 0 : 1
+  var idx = rout.idx
+  node = tr.el
+  // coral.ui.select.set({ startNode: rout.node, start: rout.idx + adder, end: rout.idx + adder, el: tr.el })
+  if ('line' in rout) {
+    if (!adder && rout.line) {
+      idx = tr.breaks[rout.line - 1].idx
+    }
+  }
+  if (adder && idx > 0) {
+    var ch = tr.el.textContent.charAt(idx - 1)
+    if (!ch.trim() || ch === '-') { idx -= 1 }
+  }
+  var rin = selectRange(node, idx, idx, 2, rout.node)
+  if (trange.lastpos !== idx) {
+    trange.lastpos = idx
+    // console.log ('pos', idx, rin.range)
+  }
+  document.getSelection().removeAllRanges()
+  document.getSelection().addRange(rin.range)
+}
+window.addEventListener('mousemove', function (event) {
+  if (trange.tr && trange.track) {
+    var x = event.pageX
+    var y = event.pageY
+    testSetSelection (trange.tr, x, y, )
+  }
+})

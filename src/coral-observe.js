@@ -221,7 +221,7 @@
     var l = path.length
     for (var i = 0; i < l; i++) {
       var k = path[i]; var o = obj; obj = o[k]
-      if ((!obj || typeof (obj) !== 'object') && ((i + 1 < l) || (false/*!(k in o)*/))) return { last: { obj: o, prop: k }, apply: doterror }
+      if ((!obj || typeof (obj) !== 'object') && ((i + 1 < l) || (false/*! (k in o) */))) return { last: { obj: o, prop: k }, apply: doterror }
     }
     return { value: obj, obj: o, prop: k, apply: dotapply }
   }
@@ -239,8 +239,12 @@
     if (bt === '[object Array]') {
       if (Object.prototype.toString.call(a) !== '[object Array]') a = [] // should we FORCE to array?
       var c = []
+      /*
       for (var i in b) { if (!(i in a)) c[i] = b[i] }
       for (i in c) a[i] = c[i]
+      */
+      for (var i in b) { if (!(i in a)) c[i] = deepcopy(c[i], b[i]) }
+      for (i in c) a[i] = deepcopy(a[i], c[i])
       return a
     }
     if (typeof (a) !== 'object') a = {}

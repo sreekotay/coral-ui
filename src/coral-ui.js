@@ -466,7 +466,7 @@ function UIFactory (opts) {
     switch (sel[0]) {
       case '^':
         refobj = rf.rootEl
-        var which = sel.substring(1) | 0; while (which--) refObj = refObj.parentElement
+        var which = sel.substring(1) | 0; while (which--) refobj = refobj.parentElement
         refobj = refobj && refobj.coral
         if (!refobj) coralError('unable to find parent to state bind', rf, proppath)
         sp = realizeSource(refobj, copyprop)

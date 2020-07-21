@@ -28,21 +28,19 @@
     switch (w) {
       case 'num':
         var n = sel.split('.')
-        for (var i = 0; i < n[i]; i++) {
-          node = node.childNodes[n[i]]
+        for (var i = 0; i < n.length; i++) {
+          node = node.childNodes[n[i] | 0]
           if (!node) return null
         }
         return node
-        break
       case '^':
         var i = sel.substring(1) | 0
         while (i) node = node.parentNode
         return node
-        break
       default: return node.querySelector(sel)
     }
   }
-  function last () { return this[this.length - 1] }
+
   UIApply.prototype._mapper = function (u, rootEl, rootO, cEl, o, path) {
     cEl = cEl || rootEl
     path = path || ''
@@ -58,11 +56,12 @@
       }
       var rp = rootO[path + k] = getChildPath(rootEl, el)
       rp.tel = el
-      rp.last = last
       rp.path = k.split('.')
       if (sel !== uk) {
         var uk1 = uk[1]
-        if (typeof (uk1) === 'object') { rp.ui = this._mapper(uk1, rootEl, rootO, el, o, path + k + '.') } else rp.func = this.funcmap.prop[path + k] = typeof (uk1) === 'string' ? uk1.split('.') : uk1
+        if (typeof (uk1) === 'object') {
+          rp.ui = this._mapper(uk1, rootEl, rootO, el, o, path + k + '.')
+        } else rp.func = this.funcmap.prop[path + k] = typeof (uk1) === 'string' ? uk1.split('.') : uk1
       }
     }
     return o
@@ -100,22 +99,13 @@
     for (var k in u) {
       var uk = u[k]
       if (k === 'ui') elbind(el, uk)
-      else uk.el = pathEl(el, uk)
+      else uk.el = pathEl(el, uk, [])
     }
   }
   UIApply.prototype.hydrate = function (rootEl) {
     var e = this.fragment
     for (var i = 0; i < e.childNodes.length; i++) { rootEl.appendChild(e.childNodes[i].cloneNode(true)) }
     elbind(rootEl, this.uimap)
-  }
-
-  function pathEl (el, pa, offsets) {
-    offsets = offsets || []
-    for (var i = 0; i < pa.length; i++) {
-      if (!el) { debugger }
-      el = el.childNodes[pa[i] + (offsets[i] || 0)]
-    }
-    return el
   }
 
   // ==========================================================
@@ -126,14 +116,13 @@
   function changeEl (el, value, func) {
     // if (value === 1) debugger;
     if (func) {
-      if (0 && isfunction(func)) func(el, value)
-      else {
-        var v = coral.dot(el, func)
-        if (isfunction(v.value)) v.value.call(v.obj, value)
-        else if (v.obj && v.value !== value) v.obj[v.prop] = value
-      }
+      var v = coral.dot(el, func)
+      // if (v.value !== value) v.apply(value) ;return
+      if (isfunction(v.value)) v.value.call(v.obj, value)
+      else if (v.obj && v.value !== value) v.obj[v.prop] = value
       return
     }
+    el.origNodes = null
     if (el.nodeType === 3) { el.nodeValue = value } else if (el.nodeName === 'TEXTAREA' || el.nodeName == 'INPUT') { el.value = value } else {
       if (el.childNodes.length === 1 && el.firstChild.nodeType === 3) {
         if (el.firstChild.nodeValue !== value) { el.firstChild.nodeValue = value }
@@ -148,38 +137,80 @@
 
   // ==========================================================
   // data apply
-  // ==========================================================
+  // ====== ====================================================
   function insertAfter (newNode, afterNode) {
     afterNode.parentNode.insertBefore(newNode, afterNode.nextSibling)
   }
+  function pathEl (el, pa, offsets) {
+    for (var i = 0; i < pa.length; i++) {
+      if (!el) debugger
+      el = el.childNodes[pa[i] + (offsets[i] || 0)]
+    }
+    return el
+  }
+
+  function pathElNew (el, pa, offsets) {
+    for (var i = 0; i < pa.length; i++) {
+      if (!el) debugger
+      el = (el.origNodes || el.childNodes)[pa[i]]
+      var o = (offsets[i] || 0)
+      while (o--) el = el.nextSibling
+      //if (o) el = el.parentNode.childNodes[getChildIndex(el) + o]
+    }
+    return el
+  }
+
+  function retarget (rootEl, el, patharr, offsets) {
+    //return pathEl (rootEl, patharr, offsets)
+      return pathElNew (rootEl, patharr, offsets)
+    var newpath = getChildPath(rootEl, el)
+    var off = []
+    var ol = offsets.length
+    if (ol) {
+      off[ol - 1] = offsets[ol - 1]
+    }
+    newpath.el = pathEl(rootEl, newpath, offsets)
+    return newpath.el
+  }
+
   function applier (ui, rootEl, o, path, offsets) {
     offsets = offsets || []
     var u = ui.uimap
     var f = ui.funcmap
     if (Array.isArray(o)) {
       var au = u[path]; if (!au) return
-      var pel = pathEl(rootEl, au, offsets); if (!pel) return
-      var aindex = au.last()
-      var arrEl = pel.arrEl = pel.arrEl || [pel]
+      var pel = retarget(rootEl, au.el, au, offsets) //|| pathEl(rootEl, au, offsets); if (!pel) return
+      var wmap = pel.uiwm = pel.uiwm || {}//new WeakMap()
+      var arrEl = wmap[path] =  wmap[path] || [pel]//wmap.get(au)
+      //if (!arrEl) { arrEl = [pel]; wmap.set(au, arrEl) }
+      // var arrEl = pel.arrEl = pel.arrEl ||  [pel]
+      var coffsets
       pel = pel.parentNode
+      pel.origNodes = pel.origNodes || 
+                      [].slice.call(pel.childNodes)
       if (o.length) {
-        for (var i = 0; i < o.length; i++) {
-          if (i >= arrEl.length || arrEl[0].nodeType === '#comment') {
+        for (var i in o) {//var i = 0; i < o.length; i++) {
+          if (i >= arrEl.length || arrEl[0].nodeName === '#comment') {
             var el = au.tel.cloneNode(true)
             if (i) {
               insertAfter(el, arrEl[i - 1])
             } else {
+              au.el = el
               insertAfter(el, arrEl[0])
               pel.removeChild(arrEl[0])
             }
             arrEl[i] = el
           }
           var e = o[i]
-          if (typeof (e) === 'object') {
-            offsets = offsets.slice()
-            offsets[au.length - 1] = i
-            applier(ui, rootEl, e, path, offsets)
+          if (e === undefined) continue
+          if (Array.isArray(e) && 0) {
+
+          } else if (!Array.isArray(e) && typeof (e) === 'object') {
+            coffsets = coffsets || offsets.slice()
+            coffsets[au.length - 1] = i
+            applier(ui, rootEl, e, path, coffsets)
           } else {
+            if (au.ui) { console.error(au); throw new Error ('expected object')}
             callElFunc(arrEl[i], path, e, f)
           }
         }
@@ -188,9 +219,9 @@
           arrEl.length--
         }
       } else if (arrEl.length > 1 || arrEl[0].nodeName !== '#comment') {
-        var ce = document.createComment(' ')
+        var ce = au.el = document.createComment('coral.ui placeholder') // save one placeholder if we go to zero
         pel.insertBefore(ce, arrEl[0])
-        for (var i = 0; i < arrEl.length; i++) pel.removeChild(arrEl[i])
+        for (i = 0; i < arrEl.length; i++) pel.removeChild(arrEl[i])
         arrEl = [ce]
       }
 
@@ -202,11 +233,12 @@
     for (var k in o) {
       var ok = o[k]
       var pk = path + k
+      var au = u[pk]
 
       if ((k | 0) == k) {
         var uop = u[op]; if (!uop) continue
         if (typeof (ok) === 'object') {
-          offsets = offsets.slice()
+          // offsets = offsets.slice()
           // offsets[uop.length - 1] = k
           applier(ui, rootEl, ok, op, offsets)
           continue
@@ -219,10 +251,11 @@
       }
 
       if (typeof (ok) === 'object') { applier(ui, rootEl, ok, pk, offsets); continue }
-      if (!u[pk]) continue
-      var el = pathEl(rootEl, u[pk], offsets)
+      if (!au) continue
+      if (au.ui) { console.error(au); throw new Error ('expected object')}
+      var el = retarget(rootEl, au.el, au, offsets) //|| pathEl(rootEl, u[pk], offsets)
       if (el) {
-        if (el.arrEl) applier(ui, rootEl, [ok], pk, offsets)
+        if (0 && el.arrEl) applier(ui, rootEl, [ok], pk, offsets)
         else callElFunc(el, pk, ok, f)
       }
     }
@@ -241,9 +274,11 @@
     var ui = this
     var u = ui.uimap
     coral.observe(state, function (updates) {
-      var o = {}
+      var o = Array.isArray(updates.obj) ? [] : {}
       o[updates.prop] = updates.value
+      if (Array.isArray(updates.obj)) o.length = updates.obj.length
 
+      var pp
       var offsets = []
       var c = updates.chain
       var path = ''
@@ -255,32 +290,10 @@
           offsets[u[path].length - 1] = ci.p | 0
         } else {
           if (updates.action !== 'set') { o = {}; o[ci.p] = updates.obj; pp = '' + (path || '') }
-          path = (path ? path + '.' : '') + ci.p 
+          path = (path ? path + '.' : '') + ci.p
         }
       }
       ui.data(el, o, updates.action === 'set' ? path : pp, offsets)
-      /*
-      if (1) return
-      var dp = updates.dotpath.split('.')
-      var offsets = []
-      var path = ''
-      var l = 0
-      var pp
-      for (var i = 0; i < dp.length; i++) {
-        var dpi = dp[i]
-        if ((dpi | 0) == dp[i]) {
-          if (u[path]) {
-            offsets[u[path].length - 1] = dpi | 0
-          }
-        } else {
-          l++
-          if (updates.action !== 'set') { o = {}; o[dpi] = updates.obj; pp = '' + (path || '') }
-          path = (path ? path + '.' : '') + dpi
-        }
-      }
-      ui.data(el, o, updates.action === 'set' ? path : pp, offsets)
-      // console.log(updates)
-      */
     })
   }
 
