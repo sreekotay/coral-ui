@@ -868,10 +868,10 @@ function testSetSelection(tr,x, y) {
     if (!adder && rout.line) {
       idx = tr.breaks[rout.line - 1].idx
     }
-  }
-  if (adder && idx > 0) {
-    var ch = tr.el.textContent.charAt(idx - 1)
-    if (!ch.trim() || ch === '-') { idx -= 1 }
+    if (adder && idx > 0) {
+      var ch = tr.el.textContent.charAt(idx - 1)
+      if (!ch.trim() || ch === '-') { idx -= 1 }
+    }
   }
   var rin = selectRange(node, idx, idx, 2, rout.node)
   if (trange.lastpos !== idx) {
