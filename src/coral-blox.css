@@ -22,15 +22,24 @@ body {
   max-height:0;
   padding:0;
   margin:0;
-  transition: 1s all;
+  transition: 0.5s all;
   display:flex;
   overflow: hidden;
 }
-.cui-focus .cui-editor-focus {
+.cui-shrink {
+  max-width:0 !important;
+  max-height:0 !important;
+  padding:0 !important;
+  margin:0 !important;
+  opacity: 0;
+}
+.cui-focus .cui-editor-focus, .cui-shrinkable {
   max-width:1000px;
   max-height:1000px;
   padding: initial;
   margin: initial;
+  transition: 0.5s all;
+  overflow: hidden;
 }
 .cui-editor-wrapper {
   display: inline-block;
@@ -103,6 +112,9 @@ body {
 .selected, .selected:focus {
     background-color:#a0e4ff !important;
     border-radius: 16px;
+}
+.selected.picked {
+  background-color: blue;
 }
 .container *::selection {
   background:#a0e4ff;

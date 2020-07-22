@@ -725,7 +725,17 @@ UISelect.prototype.addRect = function (rr, idx, offset, node) {
       var midbreak = false
       var pb = il && info.breaks[il - 1]
       if (node && pb && pb.node === node) { midbreak = true }
-      info.breaks.push({ rect: info.rr, offset: offset, idx: idx, midbreak: midbreak, node: info.rects.node, line: info.breaks.length })
+      info.breaks.push({
+        startRectIndex: info.breaks.length ? info.breaks[info.breaks.length - 1].endRectIndex : 0,
+        endRectIndex: info.rects.length,
+        startIndex: info.breaks.length ? info.breaks[info.breaks.length - 1].endIndex : 0,
+        endIndex: idx,
+        rect: info.rr,
+        offset: offset,
+        idx: idx,
+        midbreak: midbreak,
+        node: info.rects.node,
+        line: info.breaks.length })
       info.rr = coral.assign({}, rr)
       if (!rr) return
     }
@@ -740,12 +750,21 @@ UISelect.prototype.addRect = function (rr, idx, offset, node) {
 
 UISelect.prototype.charFromPoint = function (x, y) {
   var rrArr = (x === undefined && this.breaks) ? this.breaks : this.rects
-  for (var i = rrArr.length - 1; i >= 0; i--) {
+  var start = 0
+  var end = rrArr.length
+  if (1 && x !== undefined) {
+    var rbox = this.charFromPoint(undefined, y)
+    if (!rbox) return null
+    start = rbox.startRectIndex
+    end = rbox.endRectIndex
+  }
+
+  for (var i = end - 1; i >= start; i--) {
     var rr = rrArr[i].rect
     if ((x === undefined || (x >= rr.left && x < rr.right)) &&
         (y === undefined || (y >= rr.top && y < rr.bottom))) return rrArr[i]
   }
-  return null
+  return rbox
 }
 
 function testRange (node, info) {
@@ -854,11 +873,11 @@ function trange () {
   return trange.tr
 }
 
-function testSetSelection(tr,x, y) {
-  var rout = tr.charFromPoint(x, y) || tr.charFromPoint(undefined, y)
-  if (!rout) return 
-  
-    // console.log(rout.node)
+function testSetSelection (tr, x, y) {
+  var rout = tr.charFromPoint(x, y) //|| tr.charFromPoint(undefined, y)
+  if (!rout) return
+
+  // console.log(rout.node)
   drawRects([rout])
   var adder = x < (rout.rect.left + rout.rect.right) / 2 ? 0 : 1
   var idx = rout.idx
@@ -878,6 +897,7 @@ function testSetSelection(tr,x, y) {
     trange.lastpos = idx
     // console.log ('pos', idx, rin.range)
   }
+  return
   document.getSelection().removeAllRanges()
   document.getSelection().addRange(rin.range)
 }
@@ -885,6 +905,6 @@ window.addEventListener('mousemove', function (event) {
   if (trange.tr && trange.track) {
     var x = event.pageX
     var y = event.pageY
-    testSetSelection (trange.tr, x, y, )
+    testSetSelection(trange.tr, x, y)
   }
 })

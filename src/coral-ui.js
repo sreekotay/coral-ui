@@ -872,8 +872,13 @@ function UIFactory (opts) {
       style.id = '__coral_styles__'; style.type = 'text/css'
       document.getElementsByTagName('head')[0].appendChild(style)
     }
+    var sc = style.scheck = style.scheck || {}
+    if (sc[name]) return false
+
+    sc[name] = true
     var sheet = style.sheet
     sheet.insertRule(name + '{' + rules + '}', 0)
+    return true
   }
 
   // createCSS('coral-helper', 'display:none;')
@@ -930,7 +935,7 @@ function UIFactory (opts) {
     ready: ready,
     emit: emit,
     sanitize: sanitize,
-    cssRule: createCSS,
+    css: createCSS,
     styleBag: UI.prototype.styleBag,
     registry: function (name) { return name ? rf_registry[name] : rf_registry },
     find: function (a, ctx) { a = this.findAll(a, ctx); return a ? a[0] : null },

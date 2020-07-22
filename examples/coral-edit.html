@@ -652,7 +652,7 @@
       }
       coral.ui.select.savedASelection = false
 
-      if (uis.length) {
+      if (uis.length && 0) {
         var cinfos = getSelectionRootIndex(uis[0].rootEl)
         var barr = uis[0].state.blocks 
         var h = ''
@@ -725,11 +725,106 @@
     <script src='https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.2/dragula.js'></script>
 -->
 <div coral='cui-joystick' style='border-radius:100%; width:50px; height:50px; bottom: 0; right: 0; background: radial-gradient(rgba(255,255,255,0), rgba(255,255,255,0), blue); position:fixed;z-index:1' class='joystick'>
-  <div style='border-radius:100%; width:100px; height:100px; bottom: 0; right: 0; opacity: 0.5; background: radial-gradient(rgba(255,255,255,0), rgba(255,255,255,0), #999); position:fixed;z-index:1' class='joystick'>
+  <div style='border-radius:100%; width:100px; height:100px; bottom: 0; right: 0; opacity: 0.9; background: radial-gradient(rgba(255,255,255,0), rgba(255,255,255,0), #666); position:fixed;z-index:1' class='joystick'>
   </div>
 
 </div>
+<div coral='cui-popup'> 
+
+</div>
 <script>
+function wclass() { var s=''; for (var i=0; i<arguments.length; i++)  s = s + (s.length ? ' ' : '') + (arguments[i] || ''); return s }
+coral.ui.register('cui-popup', {
+  state: {
+    x: 0,
+    y: 0,
+    input: '',
+    selected: 2,
+    list: [{title:'a'}, {title:'b'},{title:'a'}, {title:'b'},{title:'a'}, {title:'b'},{title:'a'}, {title:'b'},{title:'a'}, {title:'b'}, {title:'b'},{title:'a'}, {title:'b'},{title:'a'}, {title:'b'}]
+  },
+  data: {
+    filtered: []
+  },
+  update: function() {
+    var rel = this.rootEl
+    if (!this.init) {
+      rel.classList.add ('cui-vertical')
+      rel.classList.add ('cui-shrinkable')
+      if (rel.parentNode !== document.body) {
+        docuement.body.appendChild (rel)
+      }
+      coral.ui.css ('[coral=cui-popup] > div', 'transition: 0.1s all; border: 1px solid #ccc; padding:8px; margin: 1px;')
+      this.init = true
+    }
+    rel.setAttribute ('style', 'border: 1px solid; black; position: fixed; z-index:1001; background-color:white; top:' + this.state.x + 'px; left:' + this.state.y + ';' +  
+                                 'box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08), 0 3px 10px rgba(0, 0, 0, 0.12); transition: left 0s; transition: top 0s;')
+
+    var list = this.state.list
+    var inp = this.state.input
+    var sel = this.state.selected
+    this.html (-1, '<input style="font-size:16px;flex-grow:1; margin:12px" value="' + inp +'" placeholder="enter a command">')
+    for (var i=0; i<this.state.list.length; i++) {
+      var l = list[i]
+      var js = l.title + i
+      var shrink = (inp && js.toLowerCase().indexOf(inp)<0)
+      this.data.filtered[i] = shrink
+      var h = '<div coral-index=' + i + ' class="cui-shrinkable ' + wclass(sel==i && 'selected', shrink && 'cui-shrink') + '">' + js + 'S</div>'
+      this.html (i, h)
+    }
+  },
+  methods: {
+    options: function (arr) {
+      this.state.list = arr
+      return this.methods
+    },
+    pop: function (x, y) {
+      var el = typeof (x)==='Node' && x 
+      var r = el && el.getBoundingClientRect()
+      this.state.x = ((r && r.right) || x)
+      this.state.y = ((r && r.bottom) || y)
+      this.rootEl.classList.remove ('cui-shrink')
+      return this.methods
+      
+    },
+    select: function(idx) {
+      idx = idx | 0
+      if (idx >= 0 && idx < this.state.list.length) {
+        this.state.selected = idx
+        this.emit ('coral-popup', {item: this.state.list[idx], idx: idx})
+        this.rootEl.classList.add ('cui-shrink')
+        //this.rootEl.tabIndex = -1 
+      }
+      return this.methods
+    }
+  },
+  listeners: {
+    input: function (e) { this.state.input = e.target.value },
+    keydown: function (e) {
+      if (e.keyCode === 38 || e.keyCode === 40) {
+        do {
+          var f = this.data.filtered
+          var up = e.keyCode===40 
+          var sel = this.state.selected + 1
+          var len = (this.state.list.length + 1)
+          sel = (sel + (up?1:-1)) % len 
+          if (sel < 0) sel = len - sel
+
+          this.state.selected = sel - 1
+        } while (f[sel-1])
+      } else if (e.keyCode === 13) {
+        var el = this.rootEl.querySelector('.selected')
+        if (el && el.hasAttribute ('coral-index'))
+          this.methods.select  (el.getAttribute ('coral-index'))
+      } else if (e.keyCode === 27) {
+        this.rootEl.classList.add ('cui-shrink')
+      }
+    }, 
+    click: function(e) { 
+      var idx = e.target.getAttribute ('coral-index')
+      this.methods.select (e.target.hasAttribute ('coral-index') ? idx : -1)
+    }
+  }
+})
 coral.ui.register('cui-joystick', {
   state: {visible: false},
   data: {
