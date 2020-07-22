@@ -296,20 +296,21 @@ function Undoer (rootEl) {
       if (1) return
     }
 
+    console.time()
     var patchRedo = jsonpatch.compare(priordoc, rootEl.coral.state.blocks)
     var patchUndo = jsonpatch.compare(rootEl.coral.state.blocks, priordoc)
     if (patchRedo.length) {
-      console.time()
       patchUndo.selection = priordoc.selection
       patchRedo.selection = priordoc.selection = coral.ui.select.get(rootEl)
       patchUndo.state = patchRedo.state = funcs.state.bind(this)
       stack.execute(new EditCommand(rootEl, patchUndo, patchRedo))
       // priordoc =  jsonpatch.deepClone(rootEl.coral.state.blocks)
       jsonpatch.applyPatch(priordoc, jsonpatch.deepClone(patchRedo))
-      console.timeEnd()
-      console.log('undo ---- captured')
+      //priordoc = coral.assign({}, rootEl.coral.state.blocks)
     }
-  }
+    console.timeEnd()
+    console.log('undo ---- captured')
+}
   var react = function (mutations) {
     if (mutations.length === 2) {
       if (mutations[0].type === mutations[1].type && mutations[0].type === 'childList' &&

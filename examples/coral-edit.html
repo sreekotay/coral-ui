@@ -41,6 +41,7 @@
 
 
     function cleanNodes(rootEl, keepAttributes) {
+      if (cleanNodes.abort) return
       if (coral.ui.DOM.clean(rootEl, keepAttributes)) {
         console.log ('undo ---- setting block')
         globalUndoer.block(true)
@@ -173,6 +174,7 @@
       lifecycle: {
         afterRender: function () {
           if (this.data.flags.noafterrender) return
+          if (!this.data.forceReadFromDOM) return
           this.methods.readFromDOM(this.data.forceReadFromDOM)
           this.data.forceReadFromDOM = false
         }
@@ -238,9 +240,10 @@
           if (this.data.flags.noreadfromdom) return
           var els = this.rootEl.children
           var barr = this.state.blocks
-          var bi = inidx || 0
+          var bi = (inidx|0) || 0
+          var bin = bi
           var diff 
-          for (var i=bi; i<(inidx===undefined ? els.length : inidx+1); i++) {
+          for (var i=bi; i<(inidx===undefined ? els.length : bin+1); i++) {
             if (!els[i]) continue
             var ch = els[i].firstChild
             cleanNodes(ch, true)
@@ -309,6 +312,12 @@
         }
       },
       listeners: {
+        "contextmenu": function (event) {
+          var pop = coral.ui.find ('[coral=cui-popup]')
+          if (pop) pop.methods.pop (100,100)
+          event.preventDefault()
+          return false
+        },
         "dragstart.local": function (event) {
           event.preventDefault()
         },
@@ -724,7 +733,10 @@
 <!--
     <script src='https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.2/dragula.js'></script>
 -->
-<div coral='cui-joystick' style='border-radius:100%; width:50px; height:50px; bottom: 0; right: 0; background: radial-gradient(rgba(255,255,255,0), rgba(255,255,255,0), blue); position:fixed;z-index:1' class='joystick'>
+<div style='position:fixed; height:40px; bottom:0; Left:0; right:0; background:rgba(255,255,255,255.3); border-top:2px solid #ddd;'
+    onclick="coral.ui.find ('[coral=cui-popup]').methods.pop (100,100)">
+</div>
+<div coral='cui-joystick' style='border-radius:100%; width:50px; height:50px; bottom: 4px; right: calc(50% - 25px); border:2px solid #ddd; background:rgba(255,255,255,0.8); position:fixed;z-index:1' class='joystick'>
   <div style='border-radius:100%; width:100px; height:100px; bottom: 0; right: 0; opacity: 0.9; background: radial-gradient(rgba(255,255,255,0), rgba(255,255,255,0), #666); position:fixed;z-index:1' class='joystick'>
   </div>
 
@@ -740,6 +752,7 @@ coral.ui.register('cui-popup', {
     y: 0,
     input: '',
     selected: 2,
+    visible: false,
     list: [{title:'a'}, {title:'b'},{title:'a'}, {title:'b'},{title:'a'}, {title:'b'},{title:'a'}, {title:'b'},{title:'a'}, {title:'b'}, {title:'b'},{title:'a'}, {title:'b'},{title:'a'}, {title:'b'}]
   },
   data: {
@@ -748,16 +761,17 @@ coral.ui.register('cui-popup', {
   update: function() {
     var rel = this.rootEl
     if (!this.init) {
-      rel.classList.add ('cui-vertical')
       rel.classList.add ('cui-shrinkable')
+      rel.classList.add ('cui-vertical')
       if (rel.parentNode !== document.body) {
         docuement.body.appendChild (rel)
       }
-      coral.ui.css ('[coral=cui-popup] > div', 'transition: 0.1s all; border: 1px solid #ccc; padding:8px; margin: 1px;')
+      coral.ui.css ('[coral=cui-popup] > div', 'transition: 0.2s all; border: 1px solid #ccc; padding:8px; margin: 1px;')
       this.init = true
     }
-    rel.setAttribute ('style', 'border: 1px solid; black; position: fixed; z-index:1001; background-color:white; top:' + this.state.x + 'px; left:' + this.state.y + ';' +  
-                                 'box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08), 0 3px 10px rgba(0, 0, 0, 0.12); transition: left 0s; transition: top 0s;')
+    rel.classList.toggle ('cui-shrink', !this.state.visible)
+    rel.setAttribute ('style', 'border: 1px solid; black; position: fixed; z-index:1001; background-color:white; top:' + this.state.y + 'px; left:' + this.state.x + 'px;' +  
+                                 'box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08), 0 3px 10px rgba(0, 0, 0, 0.12); transition: max-height 0.3s, margin 0.2s, padding 0.3s;')
 
     var list = this.state.list
     var inp = this.state.input
@@ -782,19 +796,30 @@ coral.ui.register('cui-popup', {
       var r = el && el.getBoundingClientRect()
       this.state.x = ((r && r.right) || x)
       this.state.y = ((r && r.bottom) || y)
-      this.rootEl.classList.remove ('cui-shrink')
+      this.state.visible = true
+      this.rootEl.querySelector('input').focus()
       return this.methods
-      
     },
     select: function(idx) {
       idx = idx | 0
       if (idx >= 0 && idx < this.state.list.length) {
         this.state.selected = idx
         this.emit ('coral-popup', {item: this.state.list[idx], idx: idx})
-        this.rootEl.classList.add ('cui-shrink')
+        var th = this
+        setTimeout (function() { th.state.visible = false }, 250)
         //this.rootEl.tabIndex = -1 
       }
       return this.methods
+    }
+  },
+  observers: {
+    'visible': function(updates) {
+      if (this.state.visible && !this.data.sel ) 
+        this.data.sel = coral.ui.select.get()
+      else {
+        if (this.data.sel) coral.ui.select.set(this.data.sel )
+        this.data.sel = null
+      }
     }
   },
   listeners: {
@@ -816,7 +841,7 @@ coral.ui.register('cui-popup', {
         if (el && el.hasAttribute ('coral-index'))
           this.methods.select  (el.getAttribute ('coral-index'))
       } else if (e.keyCode === 27) {
-        this.rootEl.classList.add ('cui-shrink')
+        this.state.visible = false
       }
     }, 
     click: function(e) { 

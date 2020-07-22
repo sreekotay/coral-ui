@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="../src/coral.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1">   
+  <script src='../src/coral-observe.js'></script>
+  <script src='../src/coral-ui.js'></script>
+  <script src='../src/coral-virtual.js'></script>
+</head>
+<body>
+  Testing a virtual table
+  <div id=tablediv style='margin:0;height:500px; max-height:500px; overflow:auto; border: 1px solid #ccc'></div>
+</body>
+<script>
+
+  function createDOM(data) {
+    var dom = []
+    for (var j=0; j<data.length; j++) {
+      dom.create
+    }
+  }
+  function gendummydata(c, r) {
+    var data = []
+    for (var j=0; j<r; j++) {
+      var row = []
+      for (var i=0; i<c; i++) {
+        row.push (i + ':' + j)
+      }
+      data.push(row)
+    }
+    return data
+  }
+
+  var data = gendummydata(10, 100)
+  virtualBinder (tablediv, data)
+  tablediv.coralVirtual.update()
+
+
+</script>
+</html>
