@@ -314,6 +314,13 @@
         }
       },
       listeners: {
+        "coral-popup": function (event) {
+          var command = event.detail.item
+          switch (command.cmd) {
+            case 'undo': globalUndoer.undo(); break 
+            case 'redo': globalUndoer.redo(); break
+          }
+        },
         "contextmenu": function (event) {
           var pop = coral.ui.find ('[coral=cui-popup]')
           if (pop) pop.methods.pop (100,100)
@@ -653,7 +660,16 @@
       var els = [] 
       const s = window.getSelection();
 
-      
+      var sel = coral.ui.select.get()
+      var ss = sel.startNode
+      while (ss) {
+        if (ss.coral) {// && ss.coral.name === 'cui-editor') {
+          ss.coral.savedSelection = sel
+          break
+        }
+        ss = ss.parentNode
+      }
+      /*
 
       if (coral.ui.select.savedASelection) {
         var ss = coral.ui.select.savedASelection
@@ -664,7 +680,7 @@
             return false
       }
       coral.ui.select.savedASelection = false
-
+      */
       if (uis.length && 1) {
         var cinfos = getSelectionRootIndex(uis[0].rootEl)
         var barr = uis[0].state.blocks 
@@ -747,8 +763,12 @@
 
     </div>
   </div>
-  <div coral='cui-popup'> 
-
+  <div coral='cui-popup' coral-s-target='[coral=cui-editor]'> 
+    <script type='coral-s-list'>
+      [
+        {"title":"undo", "cmd":"undo"}, {"title":"redo", "cmd":"redo"}
+      ]
+    </script>
   </div>
 <script>
 function wclass() { var s=''; for (var i=0; i<arguments.length; i++)  s = s + (s.length ? ' ' : '') + (arguments[i] || ''); return s }
@@ -757,9 +777,9 @@ coral.ui.register('cui-popup', {
     x: 0,
     y: 0,
     input: '',
-    selected: 2,
+    selected: -1,
     visible: false,
-    list: [{title:'a'}, {title:'b'},{title:'a'}, {title:'b'},{title:'a'}, {title:'b'},{title:'a'}, {title:'b'},{title:'a'}, {title:'b'}, {title:'b'},{title:'a'}, {title:'b'},{title:'a'}, {title:'b'}]
+    list: []//{title:'a'}, {title:'b'},{title:'a'}, {title:'b'},{title:'a'}, {title:'b'},{title:'a'}, {title:'b'},{title:'a'}, {title:'b'}, {title:'b'},{title:'a'}, {title:'b'},{title:'a'}, {title:'b'}]
   },
   data: {
     filtered: []
@@ -786,10 +806,10 @@ coral.ui.register('cui-popup', {
     this.html (-1, '<input style="font-size:16px;flex-grow:1; margin:12px" value="' + inp +'" placeholder="enter a command">')
     for (var i=0; i<this.state.list.length; i++) {
       var l = list[i]
-      var js = l.title + i
+      var js = l.title 
       var shrink = (inp && js.toLowerCase().indexOf(inp)<0)
       this.data.filtered[i] = shrink
-      var h = '<div coral-index=' + i + ' class="cui-shrinkable ' + wclass(sel==i && 'selected', shrink && 'cui-shrink') + '">' + js + 'S</div>'
+      var h = '<div coral-index=' + i + ' class="cui-shrinkable ' + wclass(sel==i && 'selected', shrink && 'cui-shrink') + '">' + js + '</div>'
       this.html (i, h)
     }
   },
@@ -811,7 +831,11 @@ coral.ui.register('cui-popup', {
       idx = idx | 0
       if (idx >= 0 && idx < this.state.list.length) {
         this.state.selected = idx
-        this.emit ('coral-popup', {item: this.state.list[idx], idx: idx})
+        var em = coral.ui.find(this.state.target)
+        if (em) {
+          em.emit ('coral-popup', {item: this.state.list[idx], idx: idx})
+          this.data.sel = em.savedSelection || this.data.sel
+        } else console.error ('no target for item', idx)
         var th = this
         setTimeout (function() { th.state.visible = false }, 250)
         //this.rootEl.tabIndex = -1 
@@ -824,8 +848,11 @@ coral.ui.register('cui-popup', {
       if (this.state.visible && !this.data.sel ) 
         this.data.sel = coral.ui.select.get()
       else {
-        if (this.data.sel) coral.ui.select.set(this.data.sel )
-        this.data.sel = null
+        var th = this
+        if (this.data.sel) {
+          coral.ui.select.set(th.data.sel)
+          th.data.sel = null
+        }
       }
     }
   },

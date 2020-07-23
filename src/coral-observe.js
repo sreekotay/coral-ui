@@ -243,9 +243,13 @@
       for (var i in b) { if (!(i in a)) c[i] = b[i] }
       for (i in c) a[i] = c[i]
       */
+     /*
       for (var i in b) { if (!(i in a)) c[i] = deepcopy(c[i], b[i]) }
       for (i in c) a[i] = deepcopy(a[i], c[i])
-      return a
+      */
+
+      for (var i=0; i<b.length; i++) if (a.indexOf(b[i])<0) c.push (deepcopy(b[i]))
+      return a.concat(c)
     }
     if (typeof (a) !== 'object') a = {}
     for (var k in b) a[k] = deepcopy(a[k], b[k])
