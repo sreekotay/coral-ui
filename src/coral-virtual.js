@@ -22,6 +22,8 @@ var virtualBinder = function (rootEl, children, parent) {
     } else if (eventType === 'move') {
       rootEl.scrollTop = scrollTracker.scrollTop - y
       rootEl.scrollLeft = scrollTracker.scrollLeft - x
+      if (rootEl.clientHeight + rootEl.scrollTop + 1 >= rootEl.scrollHeight)
+        return true
     }
   }
 
@@ -310,26 +312,29 @@ function trackIt (opts) {
   offset = 0
   function down (e) {
     console.log(velocity)
-    if (Math.abs(velocity) > 10) multiplier = Math.abs(velocity) / 10
-    else multiplier = 1
+    if (!tracking) opts.update(e, 'down')
+    if (1) {
+      if (1 && Math.abs(velocity) > 10) multiplier = Math.abs(velocity) / 20
+      else multiplier = 1
 
-    tracking = tit.cleanEvent(e)
-    reference = tracking.y
-    velocity = amplitude = 0
-    offset = 0
-    frame = offset
-    timestamp = Date.now()
-    clearInterval(ticker)
-    tickerCount = 0
-    ticker = setInterval(track, 100)
+      tracking = tit.cleanEvent(e)
+      reference = tracking.y
+      velocity = amplitude = 0
+      offset = 0
+      frame = offset
+      timestamp = Date.now()
+      clearInterval(ticker)
+      tickerCount = 0
+      ticker = setInterval(track, 100)
 
+      opts.update(e, 'down')
+    }
     tit.stopEvent(e)
-    opts.update(e, 'down')
   }
 
   function scroll (x, y) {
     offset = y
-    opts.update(null, 'move', x, y)
+    return opts.update(null, 'move', x, y)
   }
 
   function autoScroll () {
@@ -338,12 +343,19 @@ function trackIt (opts) {
     if (amplitude) {
       elapsed = Date.now() - timestamp
       delta = -amplitude * Math.exp(-elapsed / timeConstant)
+      var cancel = false
       if (delta > 0.5 || delta < -0.5) {
-        scroll(0, target + delta)
-        requestAnimationFrame(autoScroll)
-      } else {
+        if (!scroll(0, target + delta))
+          requestAnimationFrame(autoScroll)
+        else cancel = true
+      } else cancel = true
+      
+      if (cancel) {
+        tracking = null
         scroll(0, target)
         velocity = 0
+        offset = 0
+        opts.update(null, 'up')
       }
     }
   }
@@ -364,17 +376,21 @@ function trackIt (opts) {
   }
 
   function up (e) {
-    tracking = null
     tit.stopEvent(e)
     clearInterval(ticker)
     if (!tickerCount) track(200)
+    velocity *= multiplier
     if (velocity > 10 || velocity < -10) {
-      amplitude = 0.8 * velocity * multiplier
+      amplitude = 0.8 * velocity 
       target = Math.round(offset + amplitude)
       timestamp = Date.now()
       requestAnimationFrame(autoScroll)
+    } else {
+      tracking = null
+      velocity = 0
+      offset = 0
+      opts.update(e, 'up')
     }
-    opts.update(e, 'up')
   }
 
   function move (e) {
