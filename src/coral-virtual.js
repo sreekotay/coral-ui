@@ -32,7 +32,7 @@ var virtualBinder = function (rootEl, children, parent) {
       update: scrollTracker
     })
   }
-  if (window.scrollSensor)  {
+  if (window.ScrollSensor)  {
 
     const scrollSensor = new ScrollSensor({
       element: rootEl.nextElementSibling,
@@ -76,6 +76,7 @@ var virtualBinder = function (rootEl, children, parent) {
     console.time('update scroll')
     update()
     console.timeEnd('update scroll')
+    e.stopPropagation()
   })
 
   var pause = false
