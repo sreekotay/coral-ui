@@ -32,25 +32,28 @@ var virtualBinder = function (rootEl, children, parent) {
       update: scrollTracker
     })
   }
-  const scrollSensor = new ScrollSensor({
-    element: rootEl.nextElementSibling,
-    options: {
-      // maxScrollLeft: rootEl.scrollWidth - rootEl.clientWidth,
-      // maxScrollTop: rootEl.scrollHeight - rootEl.clientHeight,
-      mouseMoveIsEnable: false,
-      mouseWheelInertiaXDeceleration: 5000,
-      mouseWheelInertiaYDeceleration: 5000,
-      mouseMoveInertiaXDeceleration: 5000,
-      mouseMoveInertiaYDeceleration: 5000,
-      touchInertiaXDeceleration: 5000,
-      touchInertiaYDeceleration: 5000
-    }
-  })
-  scrollSensor.on('scroll', event => {
-    console.log(event)
-    rootEl.scrollTop = event.scrollTop
-    rootEl.scrollLeft = event.scrollLeft
-  })
+  if (window.scrollSensor)  {
+
+    const scrollSensor = new ScrollSensor({
+      element: rootEl.nextElementSibling,
+      options: {
+        // maxScrollLeft: rootEl.scrollWidth - rootEl.clientWidth,
+        // maxScrollTop: rootEl.scrollHeight - rootEl.clientHeight,
+        mouseMoveIsEnable: false,
+        mouseWheelInertiaXDeceleration: 5000,
+        mouseWheelInertiaYDeceleration: 5000,
+        mouseMoveInertiaXDeceleration: 5000,
+        mouseMoveInertiaYDeceleration: 5000,
+        touchInertiaXDeceleration: 5000,
+        touchInertiaYDeceleration: 5000
+      }
+    })
+    scrollSensor.on('scroll', event => {
+      console.log(event)
+      rootEl.scrollTop = event.scrollTop
+      rootEl.scrollLeft = event.scrollLeft
+    })
+  }
 
   cached.circular = 100
 
