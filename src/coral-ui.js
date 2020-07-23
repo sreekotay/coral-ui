@@ -927,6 +927,7 @@ function UIFactory (opts) {
   // exports
   // ============================================
   return {
+    mergeNode: mergeNode,
     register: register,
     mount: mount,
     run: run,

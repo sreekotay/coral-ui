@@ -1,3 +1,18 @@
+
+.cui-manual {
+  position: relative;
+  display:flex;
+}
+.cui-manual > * {
+  flex-grow:1;
+  position: absolute;
+  right:0;
+  left:0;
+}
+.cui-manual > * > * {
+  flex-grow: 1;
+}
+
 .cui-spacer {
   flex-grow: 1;
 }

@@ -9,6 +9,7 @@ body {
 
 }
 
+
 [coral=cui-editor] * {
   position: relative;;
   transition: all 0.25s;
@@ -17,6 +18,12 @@ body {
   z-index: 1;
 }
 
+.cui-shadow {
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12), 0 3px 10px rgba(0, 0, 0, 0.24); 
+}
+.cui-shadow-white {
+  box-shadow: 0 -4px 24px rgba(255,255,255, 0.8);
+}
 .cui-editor-focus {
   _max-width:0;
   max-height:0;
@@ -58,6 +65,7 @@ body {
 .cui-editor-h5 *,
 .cui-editor-h6 *{
   font-weight:700;
+  padding: 8px 0;
 }
 .cui-editor-li {
   padding: 0px;

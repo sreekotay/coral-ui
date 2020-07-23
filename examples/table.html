@@ -6,12 +6,32 @@
   <script src='../src/coral-observe.js'></script>
   <script src='../src/coral-ui.js'></script>
   <script src='../src/coral-virtual.js'></script>
+  <script src="https://unpkg.com/scroll-sensor@latest/dist/scroll-sensor.js"></script>
 </head>
 <body>
   Testing a virtual table
-  <div id=tablediv style='margin:0;height:500px; max-height:500px; overflow:auto; border: 1px solid #ccc'></div>
+  <div style='position:relative'>
+    <div id=tablediv style='margin:0;height:500px; max-height:500px; overflow:auto; border: 1px solid #ccc'></div>
+    <div class="cui-fill cui-manual" style='overflow:hidden;'></div>
+  </div>
 </body>
 <script>
+  Math.seed = function(s) {
+    var mask = 0xffffffff;
+    var m_w  = (123456789 + s) & mask;
+    var m_z  = (987654321 - s) & mask;
+
+    return function() {
+      m_z = (36969 * (m_z & 65535) + (m_z >>> 16)) & mask;
+      m_w = (18000 * (m_w & 65535) + (m_w >>> 16)) & mask;
+
+      var result = ((m_z << 16) + (m_w & 65535)) >>> 0;
+      result /= 4294967296;
+      return result;
+    }
+  }
+
+  var myRandomFunction = Math.seed(12354);
 
   function createDOM(data) {
     var dom = []
@@ -24,16 +44,20 @@
     for (var j=0; j<r; j++) {
       var row = []
       for (var i=0; i<c; i++) {
-        row.push (i + ':' + j)
+        //row.push ((j+1) + ('-test'.repeat(myRandomFunction()*8)) + ' : ' + (i+1))
+        row.push ((j+1) + ';' + (i+1))
       }
       data.push(row)
     }
     return data
   }
 
-  var data = gendummydata(10, 100)
+  var data = gendummydata(10, 1000)
+
+  console.time ('init')
   virtualBinder (tablediv, data)
   tablediv.coralVirtual.update()
+  console.timeEnd ('init')
 
 
 </script>
