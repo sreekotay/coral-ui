@@ -15,7 +15,7 @@ var virtualBinder = function (rootEl, children, parent) {
   }
 
   function scrollTracker (ev, eventType, x, y) {
-   // if (eventType === 'move') console.log(eventType, x, y)
+    // if (eventType === 'move') console.log(eventType, x, y)
     if (eventType === 'down') {
       scrollTracker.scrollTop = rootEl.scrollTop
       scrollTracker.scrollLeft = rootEl.scrollLeft
@@ -59,7 +59,7 @@ var virtualBinder = function (rootEl, children, parent) {
   function genrow (row) {
     var h = ''
     for (var i = 0; i < row.length; i++) {
-      h += '<div style="white-space:nowrap;background-color:red;padding:4px; border-top: 4px solid black; border-left: 8px solid black">' +
+      h += '<div style="white-space:nowrap;background-color:green;padding:4px; border-top: 4px solid black; border-left: 8px solid black">' +
             '<div style="overflow:visible;border:1px solid white; margin:2px">' +
             row[i] +
             '</div>' +
@@ -305,11 +305,14 @@ function trackIt (opts) {
   var velocity, timestamp, frame, offset, reference, ticker, amplitude, target
   var timeConstant = 325
   var tickerCount = 0
-  var multipler = 1
+  var multiplier = 1
 
   offset = 0
   function down (e) {
     console.log(velocity)
+    if (Math.abs(velocity) > 10) multiplier = Math.abs(velocity) / 10
+    else multiplier = 1
+
     tracking = tit.cleanEvent(e)
     reference = tracking.y
     velocity = amplitude = 0
@@ -324,7 +327,7 @@ function trackIt (opts) {
     opts.update(e, 'down')
   }
 
-  function scroll(x, y) {
+  function scroll (x, y) {
     offset = y
     opts.update(null, 'move', x, y)
   }
@@ -336,10 +339,10 @@ function trackIt (opts) {
       elapsed = Date.now() - timestamp
       delta = -amplitude * Math.exp(-elapsed / timeConstant)
       if (delta > 0.5 || delta < -0.5) {
-        scroll (0, target + delta)
+        scroll(0, target + delta)
         requestAnimationFrame(autoScroll)
       } else {
-        scroll (0, target)
+        scroll(0, target)
         velocity = 0
       }
     }
@@ -347,7 +350,7 @@ function trackIt (opts) {
 
   function track (el) {
     var now, elapsed, delta, v
-    tickerCount ++
+    tickerCount++
 
     now = Date.now()
     elapsed = el || now - timestamp
@@ -357,16 +360,16 @@ function trackIt (opts) {
 
     v = 1000 * delta / (1 + elapsed)
     velocity = 0.8 * v + 0.2 * velocity
-    //velocity = -500
+    // velocity = -500
   }
 
   function up (e) {
     tracking = null
     tit.stopEvent(e)
     clearInterval(ticker)
-    if (!tickerCount) track(100)
+    if (!tickerCount) track(200)
     if (velocity > 10 || velocity < -10) {
-      amplitude = 0.8 * velocity
+      amplitude = 0.8 * velocity * multiplier
       target = Math.round(offset + amplitude)
       timestamp = Date.now()
       requestAnimationFrame(autoScroll)
@@ -381,9 +384,9 @@ function trackIt (opts) {
       var delta = moved.y - reference
       if (delta > 2 || delta < -2) {
         reference = moved.y
-        //scroll(offset + delta)
+        // scroll(offset + delta)
       }
-      scroll (moved.x - tracking.x, moved.y - tracking.y)
+      scroll(moved.x - tracking.x, moved.y - tracking.y)
       tit.stopEvent(e)
     }
   }
@@ -409,4 +412,3 @@ trackIt.stopEvent = function (e) {
   e.preventDefault()
   e.stopPropagation()
 }
-
