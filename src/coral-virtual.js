@@ -15,7 +15,7 @@ var virtualBinder = function (rootEl, children, parent) {
   }
 
   function scrollTracker (eventType, x, y) {
-    console.log(eventType, x, y)
+    if (eventType !== 'track') console.log(eventType, x, y)
     if (eventType === 'start') {
       scrollTracker.scrollTop = rootEl.scrollTop
       scrollTracker.scrollLeft = rootEl.scrollLeft
@@ -26,14 +26,13 @@ var virtualBinder = function (rootEl, children, parent) {
   }
 
   var imp
-  if (0) {
+  if (1) {
     imp = new Impetus({
       source: rootEl.nextElementSibling,
       update: scrollTracker
     })
   }
-  if (window.ScrollSensor)  {
-
+  if (0 && window.ScrollSensor) {
     const scrollSensor = new ScrollSensor({
       element: rootEl.nextElementSibling,
       options: {
@@ -73,10 +72,10 @@ var virtualBinder = function (rootEl, children, parent) {
   }
 
   rootEl.addEventListener('scroll', function (e) {
-    console.time('update scroll')
+    // console.time('update scroll')
     update()
-    console.timeEnd('update scroll')
-    e.stopPropagation()
+    // console.timeEnd('update scroll')
+    // e.stopPropagation()
   })
 
   var pause = false
@@ -174,7 +173,7 @@ var virtualBinder = function (rootEl, children, parent) {
     rel.style.right = (rootEl.offsetWidth - rootEl.clientWidth) + 'px'
     rel.style.bottom = (rootEl.offsetHeight - rootEl.clientHeight) + 'px'
     var nw = normalizeWidths(rel, retry || widths)
-    console.log('width', nw)
+    // console.log('width', nw)
     be.style.minWidth = (nw - 1 * cellrectwidth(rootEl)) + 'px'
     rootEl.scrollLeft = scrollLeft
     if (props.height) rootEl.style.height = props.height; else rootEl.style.removeProperty('height')
@@ -410,7 +409,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       }
 
       sourceEl.addEventListener('touchstart', onDown)
-      sourceEl.addEventListener('mousedown', onDown)
+      sourceEl.addEventListener('touchmove', onMove, getPassiveSupported() ? { passive: false } : false)
+      sourceEl.addEventListener('touchend', onUp)
+      sourceEl.addEventListener('touchcancel', stopTracking)
+      // sourceEl.addEventListener('mousedown', onDown)
     })()
 
     /**
@@ -420,7 +422,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
        */
     this.destroy = function () {
       sourceEl.removeEventListener('touchstart', onDown)
-      sourceEl.removeEventListener('mousedown', onDown)
+      // sourceEl.removeEventListener('mousedown', onDown)
 
       cleanUpRuntimeEvents()
 
@@ -503,8 +505,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       document.removeEventListener('touchmove', onMove, getPassiveSupported() ? { passive: false } : false)
       document.removeEventListener('touchend', onUp)
       document.removeEventListener('touchcancel', stopTracking)
-      document.removeEventListener('mousemove', onMove, getPassiveSupported() ? { passive: false } : false)
-      document.removeEventListener('mouseup', onUp)
+      // document.removeEventListener('mousemove', onMove, getPassiveSupported() ? { passive: false } : false)
+      // document.removeEventListener('mouseup', onUp)
     }
 
     /**
@@ -517,8 +519,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       document.addEventListener('touchmove', onMove, getPassiveSupported() ? { passive: false } : false)
       document.addEventListener('touchend', onUp)
       document.addEventListener('touchcancel', stopTracking)
-      document.addEventListener('mousemove', onMove, getPassiveSupported() ? { passive: false } : false)
-      document.addEventListener('mouseup', onUp)
+      // document.addEventListener('mousemove', onMove, getPassiveSupported() ? { passive: false } : false)
+      // document.addEventListener('mouseup', onUp)
     }
 
     /**
@@ -551,6 +553,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       }
     }
 
+    function evStop (ev) { 
+      ev.stopPropagation() 
+      ev.preventDefault()
+    }
+
     /**
        * Initializes movement tracking
        * @param  {Object} ev Normalized event
@@ -570,6 +577,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         addRuntimeEvents()
       }
       resetPosition(true)
+      evStop(ev)
     }
 
     /**
@@ -594,10 +602,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
        */
     function onUp (ev) {
       var event = normalizeEvent(ev)
+      console.log('up-----')
 
       if (pointerActive && event.id === pointerId) {
         stopTracking()
-      }
+      } else resetPosition()
+      evStop(ev)
     }
 
     /**
