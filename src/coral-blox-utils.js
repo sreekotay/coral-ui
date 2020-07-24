@@ -231,6 +231,9 @@ var EditCommand = Undo.Command.extend({
     this.apply(this.newValue)
   }
 })
+function toJSON (a) {
+  return JSON.stringify(a)
+}
 EditCommand.prototype.apply = function (o) {
   if (!EditCommand.blocked) EditCommand.blocked = true
   var el = this.textarea
@@ -249,10 +252,10 @@ EditCommand.prototype.apply = function (o) {
   el.coral.methods.readFromDOM() */
   var _b = el.coral.state.blocks
   if (0) {
-    var bs = JSON.stringify(_b)
+    var bs = toJSON(_b)
     var ss = coral.diffApply(o, bs)
     _b = el.coral.state.blocks = JSON.parse(ss)
-    o.state(JSON.stringify(_b))
+    o.state(toJSON(_b))
   } else {
     jsonpatch.applyPatch(_b, jsonpatch.deepClone(o))
     o.state(jsonpatch.deepClone(_b))
@@ -278,17 +281,33 @@ function Undoer (rootEl) {
 
   var select = function () {
     if (EditCommand.blocked) return
-    priordoc.selection = coral.ui.select.get(rootEl)
+    //priordoc.lastSelect = coral.ui.select.get(rootEl)
+  }
+  Undoer.diff = function diff (o, n) {
+    var ol = o.length
+    var nl = n.length
+    var l = Math.min(ol, nl)
+    var pre = ''
+    for (var s = 0; s < l && n[s] === o[s]; s++) pre += n[s]
+    var post = ''
+    for (var e = 0; e < l && n[nl - 1 - e] === o[ol - 1 - e]; e++) post += n[nl - 1 - e]
+
+    var r = {
+      del: o.substring(s, ol - e),
+      ins: n.substring(s, nl - e)
+    }
+
+    return r
   }
 
   function pushwholestate () {
     if (0) {
-      if (typeof (priordoc) !== 'string') priordoc = JSON.stringify(priordoc)
-      var newdoc = JSON.stringify(rootEl.coral.state.blocks)
+      if (typeof (priordoc) !== 'string') priordoc = toJSON(priordoc)
+      var newdoc = toJSON(rootEl.coral.state.blocks)
       var patchRedo = coral.diff(priordoc, newdoc)
       if (!patchRedo) return
       var patchUndo = coral.diff(newdoc, priordoc)
-      patchUndo.selection = priordoc.selection
+      patchUndo.selection = priordoc.selection //|| priordoc.lastSelect
       patchRedo.selection = priordoc.selection = coral.ui.select.get(rootEl)
       patchUndo.state = patchRedo.state = funcs.state.bind(this)
       stack.execute(new EditCommand(rootEl, patchUndo, patchRedo))
@@ -301,16 +320,37 @@ function Undoer (rootEl) {
     var patchUndo = jsonpatch.compare(rootEl.coral.state.blocks, priordoc)
     if (patchRedo.length) {
       patchUndo.selection = priordoc.selection
-      patchRedo.selection = priordoc.selection = coral.ui.select.get(rootEl)
+      patchRedo.selection = coral.ui.select.get(rootEl)
       patchUndo.state = patchRedo.state = funcs.state.bind(this)
+
+      var cmds =stack.commands
+      if (cmds.length && stack.stackPosition + 1 === cmds.length) {
+        var oldRedo = cmds[cmds.length - 1].newValue
+        var oldUndo = cmds[cmds.length - 1].oldValue
+        if (patchRedo.length===1 && patchRedo[0].op==='replace' && 
+            oldRedo.length===1 && oldRedo[0].op==='replace' &&
+            patchRedo[0].path === oldRedo[0].path) {
+          var diffs = Undoer.diff(oldRedo[0].value, patchRedo[0].value)
+          if (diffs.ins.length + diffs.del.length === 1 && 
+              diffs.ins + diffs.del !== ' ') {
+            oldRedo[0].value = patchRedo[0].value
+            oldRedo.selection = patchRedo.selection
+            //oldUndo[0].value = patchUndo[0].value
+            //oldUndo.selection = patchUndo.selection
+            console.log ('consolidate undo....')
+            return
+          }
+        }
+      }
+
       stack.execute(new EditCommand(rootEl, patchUndo, patchRedo))
-      // priordoc =  jsonpatch.deepClone(rootEl.coral.state.blocks)
       jsonpatch.applyPatch(priordoc, jsonpatch.deepClone(patchRedo))
-      //priordoc = coral.assign({}, rootEl.coral.state.blocks)
+      //priordoc.selection = coral.ui.select.get(rootEl)
+      priordoc.selection = patchRedo.selection
     }
     console.timeEnd()
     console.log('undo ---- captured')
-}
+  }
   var react = function (mutations) {
     if (mutations.length === 2) {
       if (mutations[0].type === mutations[1].type && mutations[0].type === 'childList' &&
@@ -358,4 +398,3 @@ function Undoer (rootEl) {
   }
   return funcs
 }
-
