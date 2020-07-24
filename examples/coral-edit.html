@@ -831,13 +831,16 @@ coral.ui.register('cui-popup', {
       idx = idx | 0
       if (idx >= 0 && idx < this.state.list.length) {
         this.state.selected = idx
-        var em = coral.ui.find(this.state.target)
-        if (em) {
-          em.emit ('coral-popup', {item: this.state.list[idx], idx: idx})
-          this.data.sel = em.savedSelection || this.data.sel
-        } else console.error ('no target for item', idx)
         var th = this
-        setTimeout (function() { th.state.visible = false }, 250)
+        setTimeout (function() { 
+          th.state.visible = false 
+          var em = coral.ui.find(this.state.target)
+          if (em) {
+            th.data.sel = em.savedSelection || th.data.sel
+            coral.ui.select.set (th.data.sel)
+            em.emit ('coral-popup', {item: th.state.list[idx], idx: idx})
+          } else console.error ('no target for item', idx)
+        }, 150)
         //this.rootEl.tabIndex = -1 
       }
       return this.methods
