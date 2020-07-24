@@ -832,7 +832,9 @@ coral.ui.register('cui-popup', {
       if (idx >= 0 && idx < this.state.list.length) {
         this.state.selected = idx
         var th = this
+        coral.ui.select.set (th.data.sel)
         setTimeout (function() { 
+          coral.ui.select.set (th.data.sel)
           th.state.visible = false 
           var em = coral.ui.find(th.state.target)
           if (em) {
