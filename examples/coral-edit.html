@@ -857,7 +857,7 @@ coral.ui.register('cui-popup', {
     }
   },
   listeners: {
-    input: function (e) { this.state.input = e.target.value },
+    input: function (e) { this.state.input = e.target.value;  e.stopPropagation() },
     keydown: function (e) {
       if (e.keyCode === 38 || e.keyCode === 40) {
         do {
@@ -877,6 +877,7 @@ coral.ui.register('cui-popup', {
       } else if (e.keyCode === 27) {
         this.state.visible = false
       }
+      e.stopPropagation()
     }, 
     click: function(e) { 
       var idx = e.target.getAttribute ('coral-index')
