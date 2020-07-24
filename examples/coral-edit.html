@@ -834,7 +834,7 @@ coral.ui.register('cui-popup', {
         var th = this
         setTimeout (function() { 
           th.state.visible = false 
-          var em = coral.ui.find(this.state.target)
+          var em = coral.ui.find(th.state.target)
           if (em) {
             th.data.sel = em.savedSelection || th.data.sel
             coral.ui.select.set (th.data.sel)
