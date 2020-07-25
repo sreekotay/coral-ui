@@ -754,8 +754,14 @@
     <script src='https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.2/dragula.js'></script>
 -->
   <div style='position:fixed; z-index:999' >
-    <div style='box-shadow:0 -5px 10px white; position:fixed; height:40px; bottom:0; Left:0; right:0; background:rgba(255,255,255,0.9); border-top:1px solid rgba(0,0,0,0.1);'
-        onclick="coral.ui.find ('[coral=cui-popup]').methods.pop (100,100)">
+    <div coral class='cui-horizontal cui-align' style='box-shadow:0 -5px 10px white; position:fixed; height:40px; bottom:0; Left:0; right:0; background:rgba(255,255,255,0.9); border-top:1px solid rgba(0,0,0,0.1);'
+        onclick="coral.ui.find ('[coral=cui-popup]').methods.pop (100,100)" coral-s-datasrc='state.list'>
+        <script type='coral-template(d)'>
+          <button onclick="event.stopPropagation()">${d.label}</button>
+        </script>
+        <script type='coral-s-list'>
+          [ {"label":"↺", "action":"undo"}, {"label":"↻", "action":"undo"} ]
+        </script>
     </div>
     <div coral='cui-joystick' class=cui-shadow-white style='border-radius:100%; width:50px; height:50px; bottom: 4px; right: calc(50% - 25px); border:4px solid rgba(31, 159, 209, 0.9); background:rgba(255,255,255,0.9); position:fixed;z-index:1' class='joystick'>
       <div style='border-radius:100%; width:100px; height:100px; bottom: 0; right: 0; opacity: 0.9; background: radial-gradient(rgba(255,255,255,0), rgba(255,255,255,0), #666); position:fixed;z-index:1' class='joystick'>
@@ -832,14 +838,14 @@ coral.ui.register('cui-popup', {
       if (idx >= 0 && idx < this.state.list.length) {
         this.state.selected = idx
         var th = this
-        coral.ui.select.set (th.data.sel)
+        //coral.ui.select.set (th.data.sel)
         setTimeout (function() { 
-          coral.ui.select.set (th.data.sel)
+          //coral.ui.select.set (th.data.sel)
           th.state.visible = false 
           var em = coral.ui.find(th.state.target)
           if (em) {
-            th.data.sel = em.savedSelection || th.data.sel
-            coral.ui.select.set (th.data.sel)
+            //th.data.sel = em.savedSelection || th.data.sel
+            //coral.ui.select.set (th.data.sel)
             em.emit ('coral-popup', {item: th.state.list[idx], idx: idx})
           } else console.error ('no target for item', idx)
         }, 150)
@@ -850,12 +856,13 @@ coral.ui.register('cui-popup', {
   },
   observers: {
     'visible': function(updates) {
-      if (this.state.visible && !this.data.sel ) 
-        this.data.sel = coral.ui.select.get()
-      else {
+      var em = coral.ui.find(this.state.target)
+      if (this.state.visible) {// && !this.data.sel ) 
+        this.data.sel = (em && em.savedSelection) || coral.ui.select.get()
+      } else {
         var th = this
         if (this.data.sel) {
-          coral.ui.select.set(th.data.sel)
+          coral.ui.select.set((em && em.savedSelection) || th.data.sel)
           th.data.sel = null
         }
       }
@@ -884,9 +891,11 @@ coral.ui.register('cui-popup', {
       }
       e.stopPropagation()
     }, 
-    click: function(e) { 
+    'mousedown.local': function(e) { 
+      if (e.target.nodeName === 'INPUT') return 
       var idx = e.target.getAttribute ('coral-index')
       this.methods.select (e.target.hasAttribute ('coral-index') ? idx : -1)
+      e.preventDefault()
     }
   }
 })

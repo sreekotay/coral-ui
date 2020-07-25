@@ -33,7 +33,7 @@ function UIFactory (opts) {
         if (this.rootEl.classList.contains('tag-list'))
           this.name=this.name
         */
-        //for (var i = 0; i < dl.length; i++) {
+        // for (var i = 0; i < dl.length; i++) {
         for (var i in dl) {
           var t = typeof (dl[i])
           if (dl[i]) uk = key === undefined ? dl[i].__key__ : dl[i][key]
@@ -85,7 +85,7 @@ function UIFactory (opts) {
           case 'coral-template': c.coralScript = templateEngine(args, ftext); break
           default:
             var p = type.split('coral-s-')[1]
-            if (p) { try { ftext = JSON.parse(ftext) } catch (err) {} props[p.trim()] = ftext; return true }
+            if (p) { try { ftext = JSON.parse(ftext) } catch (err) { console.error(err) } props[p.trim()] = ftext; return true }
             coralWarn('unknown coral slot type', type)
             break
         }
@@ -168,6 +168,11 @@ function UIFactory (opts) {
     return new Function(args, 'var f=function (_, exp) {return eval(exp)}; f.bind(this); return "' + templateString + '".replace(/\\${(.*?)}/g, f)')
   }
 
+  var activeEvents = {
+    focus: true,
+    blur: true
+  }
+
   function mount (el, name, localData, parentCoral) {
     localData = localData || {}
     if (!rf_registry[name]) coralError('UI NOT registered: ', name)
@@ -185,14 +190,14 @@ function UIFactory (opts) {
         al.push(k)
         var ev = k.split('.')
         var e = ev[0]
-        if (!rf_listeners[e]) { // we only need to add it once
+        if (!rf_listeners[e] || ev[1] === 'local') { // we only need to add it once... unless it's local
           var eli = listenerFactory(e)
           if (ev[1] === 'local') {
             al[e] = rl[e + '.local']
-            el.addEventListener(e, eli, false)
+            el.addEventListener(e, eli, activeEvents[e])
           } else {
             rf_listeners[e] = eli
-            document.addEventListener(e, eli, false)
+            document.addEventListener(e, eli, activeEvents[e])
           }
         }
         rl[e] = rl[k]
@@ -580,7 +585,7 @@ function UIFactory (opts) {
     return hash
   }
   UI.prototype.htmlBegin = function (forceClean) {
-  if (!this.__.harr || forceClean || this.__.hroot !== this.rootEl) {
+    if (!this.__.harr || forceClean || this.__.hroot !== this.rootEl) {
       this.__.hmap = {}
       this.__.hgeneration = -1
     }
@@ -608,8 +613,8 @@ function UIFactory (opts) {
     // try {
     var a = {}; var at
     var na = n.attributes; var nal = na.length
-    if (rf_tagvalue[c.nodeName] && c.value !== n.value) { 
-      c.value = n.value 
+    if (rf_tagvalue[c.nodeName] && c.value !== n.value) {
+      c.value = n.value
     } // for textarea and input
     for (var i = 0; i < nal; i++) {
       at = na[i]; a[at.name] = true
@@ -657,8 +662,8 @@ function UIFactory (opts) {
         var ccn = cc[i]
         var ncn = nc[i]
         if (ccn.nodeType === 3 && ncn.nodeType === 3) {
-          if (ccn.nodeValue !== ncn.nodeValue) { 
-            ccn.nodeValue = ncn.nodeValue 
+          if (ccn.nodeValue !== ncn.nodeValue) {
+            ccn.nodeValue = ncn.nodeValue
           }
           continue
         }

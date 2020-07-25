@@ -468,7 +468,9 @@
 
     if (chars.start === 0) {
       if (!node) {
+        console.error ('DAMMIT SREE - createRange')
         debugger
+        return
       }
       if (node.nodeType !== 3 && chars.firstText) { node = findNextNode(node, '#text') || node }
       range.selectNode(node)
@@ -523,6 +525,7 @@
   function setCurrentCursorPosition (inchars, el, nofocus) {
     console.log('select ---------- SETCURPOS', inchars, el)
     if (inchars === null) inchars = {}
+    inchars = coral.assign({}, inchars)
     var selection = window.getSelection()
     var chars = { start: inchars || 0, end: inchars || 0, count: 0 }
     if (typeof (inchars) === 'object') { chars.startNode = inchars.startNode; chars.start = inchars.start || 0, chars.end = inchars.end || 0, chars.count = inchars.count || 0 }
@@ -874,7 +877,7 @@ function trange () {
 }
 
 function testSetSelection (tr, x, y) {
-  var rout = tr.charFromPoint(x, y) //|| tr.charFromPoint(undefined, y)
+  var rout = tr.charFromPoint(x, y) // || tr.charFromPoint(undefined, y)
   if (!rout) return
 
   // console.log(rout.node)

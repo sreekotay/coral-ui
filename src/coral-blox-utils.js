@@ -281,7 +281,7 @@ function Undoer (rootEl) {
 
   var select = function () {
     if (EditCommand.blocked) return
-    //priordoc.lastSelect = coral.ui.select.get(rootEl)
+    priordoc.lastSelect = coral.ui.select.get(rootEl)
   }
   Undoer.diff = function diff (o, n) {
     var ol = o.length
@@ -300,6 +300,7 @@ function Undoer (rootEl) {
     return r
   }
 
+  var skipSelect = false
   function pushwholestate () {
     if (0) {
       if (typeof (priordoc) !== 'string') priordoc = toJSON(priordoc)
@@ -307,7 +308,7 @@ function Undoer (rootEl) {
       var patchRedo = coral.diff(priordoc, newdoc)
       if (!patchRedo) return
       var patchUndo = coral.diff(newdoc, priordoc)
-      patchUndo.selection = priordoc.selection //|| priordoc.lastSelect
+      patchUndo.selection = priordoc.lastSelect || priordoc.selection //|| priordoc.lastSelect
       patchRedo.selection = priordoc.selection = coral.ui.select.get(rootEl)
       patchUndo.state = patchRedo.state = funcs.state.bind(this)
       stack.execute(new EditCommand(rootEl, patchUndo, patchRedo))
@@ -319,7 +320,7 @@ function Undoer (rootEl) {
     var patchRedo = jsonpatch.compare(priordoc, rootEl.coral.state.blocks)
     var patchUndo = jsonpatch.compare(rootEl.coral.state.blocks, priordoc)
     if (patchRedo.length) {
-      patchUndo.selection = priordoc.selection
+      patchUndo.selection = (!skipSelect && priordoc.lastSelect) || priordoc.selection
       patchRedo.selection = coral.ui.select.get(rootEl)
       patchUndo.state = patchRedo.state = funcs.state.bind(this)
 
@@ -338,14 +339,16 @@ function Undoer (rootEl) {
             //oldUndo[0].value = patchUndo[0].value
             //oldUndo.selection = patchUndo.selection
             console.log ('consolidate undo....')
+            //priordoc.lastSelect = null
+            skipSelect = true
             return
           }
         }
       }
 
+      skipSelect = false
       stack.execute(new EditCommand(rootEl, patchUndo, patchRedo))
       jsonpatch.applyPatch(priordoc, jsonpatch.deepClone(patchRedo))
-      //priordoc.selection = coral.ui.select.get(rootEl)
       priordoc.selection = patchRedo.selection
     }
     console.timeEnd()
@@ -391,6 +394,7 @@ function Undoer (rootEl) {
     stack: stack,
     react: react,
     push: pushwholestate,
+    prior: priordoc,
     select: select,
     state: function (state) { if (state !== undefined) priordoc = state; return priordoc },
     block: function (status) { if (status !== undefined) EditCommand.blocked = status; return EditCommand.blocked }
