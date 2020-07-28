@@ -11,7 +11,7 @@ function generateUID () {
 function startDragRectangle (sx, sy) {
   var o = { sx: sx, sy: sy, el: document.createElement('div') }
   var s = {}
-  o.el.setAttribute('style', 'position:fixed; z-index:1000; background-color:rgba(0,0,0,0.3); pointer-events:null ')
+  o.el.setAttribute('style', 'position:fixed; z-index:1000; background-color:rgba(0,0,0,0.3); pointer-events:none')
   document.body.appendChild(o.el)
   o.move = function (x, y) {
     s = {

@@ -34,15 +34,15 @@
 }
 </style>
 <body>
-  <div _coral=myapp  class=container coral-s-seconds=1>
+  <div coral=myapp  class=container coral-s-seconds=1>
     <script type=coral-template(d)>
       <div coral=triangle coral-s-x=0 coral-s-y=0 coral-s-s=1000></div>
     </script>
 
-  <div coral=test coral-s-test='yes' >
+  <div _coral=test coral-s-test='yes' >
     <div>
       <input id=t2 coral-on-input>
-      <div coral=tags coral-s-prefix='~state.test~^2' coral-on-click>
+      <div _coral=tags coral-s-prefix='~state.test~^2' coral-on-click>
         <div style="background-color:red; color:white; display:inline-block; white-space:nowrap; margin:4px;"></div>
       </div>
     </div>

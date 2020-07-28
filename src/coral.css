@@ -293,9 +293,9 @@ th, thead > tr {
 
 
 [type="checkbox"], [type="radio"] {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
+  _-webkit-appearance: none;
+  _-moz-appearance: none;
+  _appearance: none;
   position: relative;
   height: calc(1rem + 12.5px);
   width: calc(1rem + 12.5px);
@@ -326,7 +326,7 @@ th, thead > tr {
 }
 
 [type="checkbox"][checked]:before {
-  content: '';
+  _content: '';
   color: #2196F3;
   font-family: sans-serif;
   font-size: calc(1rem + 12.5px);

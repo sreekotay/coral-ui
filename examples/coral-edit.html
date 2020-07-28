@@ -553,7 +553,6 @@
             this.methods.readFromDOM ()
           }
         },
-        
         "pointerdown": function(event) { 
           console.log (event, 'mouse')
           this.data.mousedown = getChildIndexRoot(this.rootEl, event.target) 
@@ -597,6 +596,7 @@
             this.data.mousedown.anchor = this.data.mousedown.el
             var range = window.getSelection()
             range.removeAllRanges()
+            if (this.data.mousedown.idx<0) this.data.mousedown.idx = cinfo.idx
             var start = Math.min (cinfo.idx, this.data.mousedown.idx)
             var end = Math.max (cinfo.idx, this.data.mousedown.idx)
             var els = this.rootEl.children
@@ -606,6 +606,7 @@
         },
         "pointerout": function(event) {
           return
+          /*
           console.log ("pointerleave", event)
           if (!this.data.drag) return
           console.log ("leavning", event.target)
@@ -622,7 +623,7 @@
             setTimeout(function() {this.rootEl.classList.toggle ('selected')}, 0)
           }
           this.data.mouseDir = 0
-
+          */
         },
       }
     })
@@ -754,21 +755,30 @@
     <script src='https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.2/dragula.js'></script>
 -->
   <div style='position:fixed; z-index:999' >
-    <div coral class='cui-horizontal cui-align' style='box-shadow:0 -5px 10px white; position:fixed; height:40px; bottom:0; Left:0; right:0; background:rgba(255,255,255,0.9); border-top:1px solid rgba(0,0,0,0.1);'
-        onclick="coral.ui.find ('[coral=cui-popup]').methods.pop (100,100)" coral-s-datasrc='state.list'>
-        <script type='coral-template(d)'>
-          <button onclick="event.stopPropagation()">${d.label}</button>
+    <div coral="cui-editor-buttons" class='cui-horizontal cui-align' 
+         style='box-shadow:0 -5px 10px white; position:fixed; height:40px; bottom:0; Left:0; right:0; background:rgba(255,255,255,0.9); border-top:1px solid rgba(0,0,0,0.1);'
+         coral-s-datasrc='state.list'>
+        <script type='coral-template(d,i)'>
+          <button coral-index=${i} style="color:#aaa; border:none; background:rgba(255,255,255,0.5); margin-left:4px; padding:8px 12px">${d.label}</button>
         </script>
         <script type='coral-s-list'>
-          [ {"label":"↺", "action":"undo"}, {"label":"↻", "action":"undo"} ]
+          [ {"label":"↺", "action":"undo"}, {"label":"↻", "action":"redo"},{"label": "menu", "action":"menu"} ]
         </script>
     </div>
-    <div coral='cui-joystick' class=cui-shadow-white style='border-radius:100%; width:50px; height:50px; bottom: 4px; right: calc(50% - 25px); border:4px solid rgba(31, 159, 209, 0.9); background:rgba(255,255,255,0.9); position:fixed;z-index:1' class='joystick'>
-      <div style='border-radius:100%; width:100px; height:100px; bottom: 0; right: 0; opacity: 0.9; background: radial-gradient(rgba(255,255,255,0), rgba(255,255,255,0), #666); position:fixed;z-index:1' class='joystick'>
+    <div coral='cui-joystick' class=cui-shadow-white 
+      style='border-radius:100%; width:40px; height:40px; bottom: 4px; right: calc(50% - 20px); 
+             border:8px solid rgba(0, 0, 0, 0.2); background:rgba(255,255,255,0.9); position:fixed;z-index:1' class='joystick'>
+        <div style='border-radius:100%; width:100px; height:100px; bottom: 0; right: 0; opacity: 0.9; background: radial-gradient(rgba(255,255,255,0), rgba(255,255,255,0), #666); position:fixed;z-index:1' class='joystick'>
       </div>
-
+      <div class=cui-fill style='left:-10px; right:-10px; top:-10px; bottom:-10px; border-radius:100%; overflow:hidden'>
+        <iframe src='http://localhost:9002/public/webgl/index.html' frameborder=0 height='200px' width='200px'></iframe>
+      </div>
     </div>
-  </div>
+    <div class='cui-horizontal cui-align' 
+        style='justify-content:flex-end; box-shadow:0 -5px 10px white; position:fixed; height:40px; bottom:0; right:0;'
+      <label><span style='margin-right:8px; opacity: 0.5' onclick>select</span><input type=checkbox> </label>
+    </div>
+  </div>  
   <div coral='cui-popup' coral-s-target='[coral=cui-editor]'> 
     <script type='coral-s-list'>
       [
@@ -778,6 +788,29 @@
   </div>
 <script>
 function wclass() { var s=''; for (var i=0; i<arguments.length; i++)  s = s + (s.length ? ' ' : '') + (arguments[i] || ''); return s }
+coral.ui.register ('cui-editor-buttons', {
+  listeners: {
+    "click.local": function(e){
+      console.log (e.target)
+      var idx =  e.target.hasAttribute('coral-index') ? (e.target.getAttribute('coral-index') | 0) : -1
+      if (idx>=0 && idx<this.state.list.length) {
+        var l = this.state.list[idx]
+        switch (l.action) {
+          case 'undo': globalUndoer.undo(); break
+          case 'redo': globalUndoer.redo(); break
+        }
+      } else {
+        coral.ui.find ('[coral=cui-popup]').methods.pop (100,100)
+      }
+      e.stopPropagation()
+      e.preventDefault()
+    },
+    "mousedown.local": function (e) {
+      e.stopPropagation()
+      e.preventDefault()
+    }
+  }
+})
 coral.ui.register('cui-popup', {
   state: {
     x: 0,
