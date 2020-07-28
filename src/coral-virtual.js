@@ -22,8 +22,8 @@ var virtualBinder = function (rootEl, children, parent) {
     } else if (eventType === 'move') {
       rootEl.scrollTop = scrollTracker.scrollTop - y
       rootEl.scrollLeft = scrollTracker.scrollLeft - x
-      if (rootEl.clientHeight + rootEl.scrollTop + 1 >= rootEl.scrollHeight)
-        return true
+      //if (y >= 0 && rootEl.clientHeight + rootEl.scrollTop + 1 >= rootEl.scrollHeight) { return true }
+      //if (y <= 0 && rootEl.scrollTop <= 0) { return true }
     }
   }
 
@@ -34,7 +34,8 @@ var virtualBinder = function (rootEl, children, parent) {
       update: scrollTracker
     })
   }
-  trackIt({ el: rootEl.nextElementSibling, update: scrollTracker })
+  /// trackIt({ el: rootEl.nextElementSibling, update: scrollTracker })
+  velocityIt(rootEl.nextElementSibling, scrollTracker)
   if (0 && window.ScrollSensor) {
     const scrollSensor = new ScrollSensor({
       element: rootEl.nextElementSibling,
@@ -345,11 +346,9 @@ function trackIt (opts) {
       delta = -amplitude * Math.exp(-elapsed / timeConstant)
       var cancel = false
       if (delta > 0.5 || delta < -0.5) {
-        if (!scroll(0, target + delta))
-          requestAnimationFrame(autoScroll)
-        else cancel = true
+        if (!scroll(0, target + delta)) { requestAnimationFrame(autoScroll) } else cancel = true
       } else cancel = true
-      
+
       if (cancel) {
         tracking = null
         scroll(0, target)
@@ -381,7 +380,7 @@ function trackIt (opts) {
     if (!tickerCount) track(200)
     velocity *= multiplier
     if (velocity > 10 || velocity < -10) {
-      amplitude = 0.8 * velocity 
+      amplitude = 0.8 * velocity
       target = Math.round(offset + amplitude)
       timestamp = Date.now()
       requestAnimationFrame(autoScroll)
@@ -427,4 +426,97 @@ trackIt.cleanEvent = function (e) {
 trackIt.stopEvent = function (e) {
   e.preventDefault()
   e.stopPropagation()
+}
+
+function velocityIt (container, update) {
+  var FRICTION_COEFF = 0.95
+  var BOUNCE = 0.2
+
+  // var handle = document.querySelector('#handle')
+  var bounds = container.getBoundingClientRect()
+  // var radius = handle.offsetWidth / 2
+
+  var dragging = false
+  var mouse = { x: 0, y: 0 }
+  var position = { x: 0, y: 0 }
+  var previous = { x: position.x, y: position.y } // in case position is initialised at non-zero values
+  var velocity = { x: 0, y: 0 }
+  var start = { x: 0, y: 0 }
+  var xmultiplier = 1
+  var ymultiplier = 1
+
+  function step () {
+    requestAnimationFrame(step)
+
+    if (Math.abs(velocity.x) < 1 && Math.abs(velocity.y) < 1 && !dragging) return
+
+    if (dragging) {
+      previous.x = position.x
+      previous.y = position.y
+
+      position.x = mouse.x
+      position.y = mouse.y
+
+      velocity.x = (position.x - previous.x)
+      velocity.y = (position.y - previous.y)
+    } else {
+      position.x += velocity.x * xmultiplier
+      position.y += velocity.y * ymultiplier
+
+      velocity.x *= FRICTION_COEFF
+      velocity.y *= FRICTION_COEFF
+    }
+
+    /*
+
+    if (position.x > bounds.width - radius) {
+      velocity.x *= -BOUNCE
+      position.x = bounds.width - radius
+    }
+
+    if (position.x < radius) {
+      velocity.x *= -BOUNCE
+      position.x = radius
+    }
+
+    if (position.y > bounds.height - radius) {
+      velocity.y *= -BOUNCE
+      position.y = bounds.height - radius
+    }
+
+    if (position.y < radius) {
+      velocity.y *= -BOUNCE
+      position.y = radius
+    }
+*/
+    // could use css transforms
+    // handle.style.left = position.x + 'px'
+    // handle.style.top = position.y + 'px'
+    console.log(position.y - start.y)
+    if (update(null, 'move', position.x - start.x, position.y - start.y)) {
+      dragging = false
+      velocity.x = velocity.y = 0
+    }
+  }
+
+  // attach to handle instead to init drag only when grabbing the handle
+  container.addEventListener('touchstart', function (event) {
+    var e = trackIt.cleanEvent(event)
+    console.log('touchdown')
+    var yv = Math.abs(velocity.y) 
+    ymultiplier = velocity.y>10 ? velocity.y/100 : 1
+
+    start.x = mouse.x = position.x = previous.x = e.x
+    start.y = mouse.y = position.y = previous.y = e.y
+    dragging = true 
+    update(e, 'down', 0, 0)
+  })
+  document.addEventListener('touchend', function (e) { dragging = false; update(e, 'up') })
+  document.addEventListener('touchmove', function (event) {
+    var e = trackIt.cleanEvent(event)
+    mouse.x = e.x // - bounds.left
+    mouse.y = e.y // - bounds.top
+  })
+
+  step()
 }
