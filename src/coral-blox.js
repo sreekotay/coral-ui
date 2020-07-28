@@ -876,7 +876,7 @@ function trange () {
   return trange.tr
 }
 
-function testSetSelection (tr, x, y) {
+function testSetSelection (tr, x, y, anchorSelect) {
   var rout = tr.charFromPoint(x, y) // || tr.charFromPoint(undefined, y)
   if (!rout) return
 
@@ -895,7 +895,8 @@ function testSetSelection (tr, x, y) {
       if (!ch.trim() || ch === '-') { idx -= 1 }
     }
   }
-  var rin = selectRange(node, idx, idx, 2, rout.node)
+  if (anchorSelect === undefined || anchorSelect === false) anchorSelect = idx
+  var rin = selectRange(node, Math.min(idx, anchorSelect), Math.max(anchorSelect, idx), 2, rout.node)
   if (trange.lastpos !== idx) {
     trange.lastpos = idx
     // console.log ('pos', idx, rin.range)

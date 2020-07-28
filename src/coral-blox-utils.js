@@ -234,9 +234,10 @@ var EditCommand = Undo.Command.extend({
 function toJSON (a) {
   return JSON.stringify(a)
 }
-EditCommand.prototype.apply = function (o) {
+EditCommand.prototype.apply = function (o, inel) {
   if (!EditCommand.blocked) EditCommand.blocked = true
-  var el = this.textarea
+  if (inel) EditCommand.blocked = false
+  var el = inel || this.textarea
   console.log('Undo ------ APPLYING')
   /*
   var els = el.children
@@ -270,9 +271,16 @@ EditCommand.prototype.apply = function (o) {
     }
     if ('blocksLength' in o) { _b.length = o.blocksLength; _b.splice(0, 0) }
   }
+  if (!o.selection) {
+    o.selection = coral.ui.select.get(el)
+  }
   el.coral.render_()
-  coral.ui.select.set(o.selection, el)
+  if (o.selection) coral.ui.select.set(o.selection, el)
 }
+
+var ws = xs_socket.message()
+var wsRoom = ws.sub('default')
+var wsSig = Math.random()
 
 function Undoer (rootEl) {
   var stack = new Undo.Stack()
@@ -290,9 +298,10 @@ function Undoer (rootEl) {
     var pre = ''
     for (var s = 0; s < l && n[s] === o[s]; s++) pre += n[s]
     var post = ''
-    for (var e = 0; e < l && n[nl - 1 - e] === o[ol - 1 - e]; e++) post += n[nl - 1 - e]
+    for (var e = 0; e < l && n[nl - 1 - e] === o[ol - 1 - e]; e++) post += n[nl - 1 - e] // reversed but correct
 
     var r = {
+      pos: s,
       del: o.substring(s, ol - e),
       ins: n.substring(s, nl - e)
     }
@@ -308,7 +317,7 @@ function Undoer (rootEl) {
       var patchRedo = coral.diff(priordoc, newdoc)
       if (!patchRedo) return
       var patchUndo = coral.diff(newdoc, priordoc)
-      patchUndo.selection = priordoc.lastSelect || priordoc.selection //|| priordoc.lastSelect
+      patchUndo.selection = priordoc.lastSelect || priordoc.selection // || priordoc.lastSelect
       patchRedo.selection = priordoc.selection = coral.ui.select.get(rootEl)
       patchUndo.state = patchRedo.state = funcs.state.bind(this)
       stack.execute(new EditCommand(rootEl, patchUndo, patchRedo))
@@ -324,22 +333,26 @@ function Undoer (rootEl) {
       patchRedo.selection = coral.ui.select.get(rootEl)
       patchUndo.state = patchRedo.state = funcs.state.bind(this)
 
-      var cmds =stack.commands
+      var cmds = stack.commands
       if (cmds.length && stack.stackPosition + 1 === cmds.length) {
         var oldRedo = cmds[cmds.length - 1].newValue
         var oldUndo = cmds[cmds.length - 1].oldValue
-        if (patchRedo.length===1 && patchRedo[0].op==='replace' && 
-            oldRedo.length===1 && oldRedo[0].op==='replace' &&
+        if (patchRedo.length === 1 && patchRedo[0].op === 'replace' &&
+            oldRedo.length === 1 && oldRedo[0].op === 'replace' &&
             patchRedo[0].path === oldRedo[0].path) {
           var diffs = Undoer.diff(oldRedo[0].value, patchRedo[0].value)
-          if (diffs.ins.length + diffs.del.length === 1 && 
+          if (diffs.ins.length + diffs.del.length === 1 &&
               diffs.ins + diffs.del !== ' ') {
             oldRedo[0].value = patchRedo[0].value
             oldRedo.selection = patchRedo.selection
-            //oldUndo[0].value = patchUndo[0].value
-            //oldUndo.selection = patchUndo.selection
-            console.log ('consolidate undo....')
-            //priordoc.lastSelect = null
+            // oldUndo[0].value = patchUndo[0].value
+            // oldUndo.selection = patchUndo.selection
+            wsRoom.pub({
+              patch: patchRedo,
+              sig: wsSig
+            })
+            console.log('consolidate undo....')
+            // priordoc.lastSelect = null
             skipSelect = true
             return
           }
@@ -348,12 +361,28 @@ function Undoer (rootEl) {
 
       skipSelect = false
       stack.execute(new EditCommand(rootEl, patchUndo, patchRedo))
+      if (1) wsRoom.pub({
+        patch: patchRedo,
+        sig: wsSig
+      })
       jsonpatch.applyPatch(priordoc, jsonpatch.deepClone(patchRedo))
       priordoc.selection = patchRedo.selection
     }
     console.timeEnd()
     console.log('undo ---- captured')
   }
+  var th = this
+  wsRoom.on(function (msg) {
+    if (msg.subject !== 'message') return
+    console.log('--------', msg)
+    var patchdo = msg.message
+    if (!patchdo) return
+    if (!patchdo.sig) return
+    if (patchdo.sig === wsSig) return
+    patchdo.patch.state = function() {}//funcs.state.bind(th)
+    EditCommand.prototype.apply(patchdo.patch, rootEl)
+    pushwholestate()
+  })
   var react = function (mutations) {
     if (mutations.length === 2) {
       if (mutations[0].type === mutations[1].type && mutations[0].type === 'childList' &&

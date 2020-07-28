@@ -6,6 +6,8 @@
   <!-- <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Arvo" /> -->
   <meta name="viewport" content="width=device-width, initial-scale=1">   
   <script src='../src/reeferIE11.js'></script>
+  <script src='/public/js/xs.js'></script>
+  <script src='/public/js/xs_socket.js'></script>
 
   <script src='../src/coral-observe.js'></script>
   <script src='../src/coral-ui.js'></script>
@@ -14,8 +16,9 @@
   <script src='../src/coral-blox-utils.js'></script>
   <script src='../src/coral-virtual.js'></script>
   <script src='../src/fast-json-patch.js'></script>
-  <script src='../../js/fastdiffpatch.js'></script> 
+  <script src='../src/tocca.js'></script>
 <!----  
+  <script src='../src/diff.js'></script> 
   <link href="js/css/lmdd.css" rel="stylesheet">
     <script src='./js/lmdd.js'></script>
 
@@ -24,6 +27,7 @@
   <style>
   </style>
   <script>
+
     function determineDirection(el, pageX, pageY, dir){
         var x = el.offsetLeft + el.offsetWidth/2;        
         var y = el.offsetTop + el.offsetHeight/2;        
@@ -139,7 +143,7 @@
           //this.rootEl.contentEditable = true
           this.data.init = true
         }
-        var virt = virtualBinder (this.rootEl)
+        //var virt = virtualBinder (this.rootEl)
 
         if (!barr.length) barr.push ({data:''})
         for (var i=0; i<barr.length; i++) {
@@ -191,8 +195,14 @@
           this.state.blocks = json
           this.data.forceReadFromDOM = true
         },
-        selection: function (sel) {
-
+        selectAll: function (cinfo) {
+          if (!cinfo || !cinfo.el || !cinfo.el.classList.contains ('selected')) {
+              if (cinfo.el) cinfo.el.classList.add ('selected')
+              //coral.ui.select.set ({start:0, end:0}, cinfo.el)
+              this.preserveSelection = true
+            } else {
+              coral.dot.arrayApply (this.rootEl.children, 'classList.add', 'selected')
+            }
         },
         copyToClipboard: function(event) {
           var els = this.rootEl.querySelectorAll('.selected')
@@ -430,15 +440,7 @@
                 e.preventDefault()
                 return
               } 
-              if (cinfo && !cinfo.el)
-              cinfo.el = cinfo.el
-              if (!cinfo || !cinfo.el || !cinfo.el.classList.contains ('selected')) {
-                if (cinfo.el) cinfo.el.classList.add ('selected')
-                //coral.ui.select.set ({start:0, end:0}, cinfo.el)
-                this.preserveSelection = true
-              } else {
-                coral.dot.arrayApply (this.rootEl.children, 'classList.add', 'selected')
-              }
+              this.methods.selectAll(cinfo)
               event.preventDefault()
               event.stopPropagation()
               return
@@ -670,18 +672,6 @@
         }
         ss = ss.parentNode
       }
-      /*
-
-      if (coral.ui.select.savedASelection) {
-        var ss = coral.ui.select.savedASelection
-        if (s.startOFfset === ss.startOFfset && 
-            s.endOffset === ss.endOffset && 
-            s.startContainer === ss.startContainer &&
-            s.endContainer === ss.endContainer)
-            return false
-      }
-      coral.ui.select.savedASelection = false
-      */
       if (uis.length && 1) {
         var cinfos = getSelectionRootIndex(uis[0].rootEl)
         var barr = uis[0].state.blocks 
@@ -701,26 +691,6 @@
       }
       for (var i=0; i<els.length; i++) if (els[i].classList.contains('selected')) els[i].classList.remove ('selected')
       globalUndoer.select()
-      const isExtent = function (node){
-        return node instanceof Element && node.classList.contains('container');
-      };
-      if (0)
-      for (var i=0; i<uis.length; i++) {
-        var root = uis[i].rootEl
-        var start = getChildIndexRoot(root, s.anchorNode)
-        var end = getChildIndexRoot(root, s.extentNode)
-        els = root.children
-        if (els.length)
-        if ((start.idx==0 && s.anchorOffset===0 && 
-             end.idx==root.children.length-1 && s.extentOffset >= s.extentNode.length - 1) || 
-             (s.containsNode && s.containsNode(els[0]) && s.containsNode(els[els.length - 1]))) {
-          s.removeAllRanges();
-          coral.ui.select.set(null, root)
-          uis[i].preserveSelection = true
-          for (var i=0; i<els.length; i++) if (!els[i].classList.contains('selected')) els[i].classList.add ('selected')
-        }
-      }
-
     });
 
   </script>
@@ -768,15 +738,15 @@
     <div coral='cui-joystick' class=cui-shadow-white 
       style='border-radius:100%; width:40px; height:40px; bottom: 4px; right: calc(50% - 20px); 
              border:8px solid rgba(0, 0, 0, 0.2); background:rgba(255,255,255,0.9); position:fixed;z-index:1' class='joystick'>
-        <div style='border-radius:100%; width:100px; height:100px; bottom: 0; right: 0; opacity: 0.9; background: radial-gradient(rgba(255,255,255,0), rgba(255,255,255,0), #666); position:fixed;z-index:1' class='joystick'>
+      <div style='border-radius:100%; width:100px; height:100px; bottom: 0; right: 0; opacity: 0.9; background: radial-gradient(rgba(255,255,255,0), rgba(255,255,255,0), #666); position:fixed;z-index:1' class='joystick'>
       </div>
-      <div class=cui-fill style='left:-10px; right:-10px; top:-10px; bottom:-10px; border-radius:100%; overflow:hidden'>
-        <iframe src='http://localhost:9002/public/webgl/index.html' frameborder=0 height='200px' width='200px'></iframe>
+      <div coral-slot='overlay' class=cui-fill style='display: none; left:-2px; right:-2px; top:-2px; bottom:-2px; border-radius:100%; overflow:hidden'>
+        <iframe src='./webgl/index.html' frameborder=0 height='200px' width='200px'></iframe>
       </div>
     </div>
-    <div class='cui-horizontal cui-align' 
+    <div class='cui-horizontal cui-align' coral=ced-select
         style='justify-content:flex-end; box-shadow:0 -5px 10px white; position:fixed; height:40px; bottom:0; right:0;'
-      <label><span style='margin-right:8px; opacity: 0.5' onclick>select</span><input type=checkbox> </label>
+      <label><span style='margin-right:8px; opacity: 0.5' onclick>select</span><input onomousedown="event.preventDefault()" id=selectcheck type=checkbox> </label>
     </div>
   </div>  
   <div coral='cui-popup' coral-s-target='[coral=cui-editor]'> 
@@ -787,25 +757,35 @@
     </script>
   </div>
 <script>
+coral.ui.register ('ced-select', {
+  listeners: {
+    mousedown: function(e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+  }
+})
 function wclass() { var s=''; for (var i=0; i<arguments.length; i++)  s = s + (s.length ? ' ' : '') + (arguments[i] || ''); return s }
 coral.ui.register ('cui-editor-buttons', {
   listeners: {
     "click.local": function(e){
-      console.log (e.target)
+      var noaction = false
       var idx =  e.target.hasAttribute('coral-index') ? (e.target.getAttribute('coral-index') | 0) : -1
       if (idx>=0 && idx<this.state.list.length) {
         var l = this.state.list[idx]
         switch (l.action) {
           case 'undo': globalUndoer.undo(); break
           case 'redo': globalUndoer.redo(); break
+          case 'menu': noaction = true; break
         }
-      } else {
+      } else noaction = true
+      if (noaction) 
         coral.ui.find ('[coral=cui-popup]').methods.pop (100,100)
-      }
+      
       e.stopPropagation()
       e.preventDefault()
     },
-    "mousedown.local": function (e) {
+    "mousedown": function (e) {
       e.stopPropagation()
       e.preventDefault()
     }
@@ -924,7 +904,10 @@ coral.ui.register('cui-popup', {
       }
       e.stopPropagation()
     }, 
-    'mousedown.local': function(e) { 
+    'blur':function() {
+      this.state.visible = false
+    },
+    'mousedown': function(e) { 
       if (e.target.nodeName === 'INPUT') return 
       var idx = e.target.getAttribute ('coral-index')
       this.methods.select (e.target.hasAttribute ('coral-index') ? idx : -1)
@@ -959,24 +942,25 @@ coral.ui.register('cui-joystick', {
       this.data.vx = dx/6
       this.data.vy = dy/6
       if (!this.state.interval) {
-
         var th = this
         var tr = th.data.rects
         var x = (th.data.pos.left + th.data.pos.width/2 + window.pageXOffset) + dx
         var y = (th.data.pos.top + th.data.pos.height/2 + window.pageYOffset)  + dy
-        testSetSelection (tr, x, y)
+        testSetSelection (tr, x, y, this.data.select && this.data.select.start)
       }
     }
   },
   listeners: {
     'touchstart.local': function (e) {
+        var selcheck = document.querySelector('#selectcheck').checked
         this.state.visible=true
         this.data.clientX = e.touches[0].clientX
         this.data.clientY = e.touches[0].clientY
         this.data.nx = 0
         this.data.ny = 0
         this.data.pos = coral.ui.select.coords()
-        this.data.node = coral.ui.find('*').rootEl//window.getSelection().anchorNode
+        this.data.node = coral.ui.find('[coral=cui-editor]').rootEl//window.getSelection().anchorNode
+        this.data.select = (selcheck && coral.ui.select.get(this.data.node))
         this.data.rects = testRange (this.data.node)
         this.methods.position(e)
         console.log (this.data.pos)
@@ -1000,9 +984,17 @@ coral.ui.register('cui-joystick', {
         this.methods.position(e)
         e.preventDefault()
     },
+    'dbltap': function (e) {
+      var ced = coral.ui.find('[coral=cui-editor]')
+      var sel = coral.ui.select.get(ced.rootEl)//window.getSelection()
+      var selNode = sel.startNode//anchorNode
+      var cinfo = getChildIndexRoot (ced.rootEl, selNode)
+      ced.methods.selectAll(cinfo)
+    },
     'touchend.local': function (e) {
       this.state.visible=false
       e.preventDefault()
+      //document.querySelector('#selectcheck').checked = false
       if (this.state.interval) {
         clearInterval(this.state.interval)
         this.state.interval = null
