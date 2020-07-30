@@ -17,6 +17,7 @@
   <script src='../src/coral-virtual.js'></script>
   <script src='../src/fast-json-patch.js'></script>
   <script src='../src/tocca.js'></script>
+  <script src='C:\Users\Sree\Documents\git_stuff\yjs\dist\yjs.cjs'></script>
 <!----  
   <script src='../src/diff.js'></script> 
   <link href="js/css/lmdd.css" rel="stylesheet">
@@ -341,11 +342,11 @@
           event.preventDefault()
         },
         "focus.local": function(event) {
-          console.log ('focus', event.target)
+          //console.log ('focus', event.target)
           return
         },
         "blur.local": function(event) {
-          console.log ('blur', event.target)
+          //console.log ('blur', event.target)
           return
         },
         "click": function(event) {
@@ -529,7 +530,7 @@
             //html = html.replace(/\>(\t|\s|\n|\r)*\</g, '><').trim()
             inel.innerHTML = html 
             //h = ''; var els = inel.children; for (var i=0; i<els.length; i++) h+=els[i].outerHTML; inel.innerHTML = h;
-            var block = globalUndoer.block()
+            var block = false//globalUndoer.block()
             cleanNodes(inel)
             inel.normalize()
             text = inel.innerHTML

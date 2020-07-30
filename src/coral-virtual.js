@@ -2,7 +2,7 @@ var virtualBinder = function (rootEl, children, parent) {
   parent = parent || document.body
   if (rootEl.coralVirtual) return rootEl.coralVirtual
 
-  var defheight = 20
+  var defheight = 30
   var cached = []
   var rowdata = []
   var gcs = window.getComputedStyle(rootEl)
@@ -22,8 +22,8 @@ var virtualBinder = function (rootEl, children, parent) {
     } else if (eventType === 'move') {
       rootEl.scrollTop = scrollTracker.scrollTop - y
       rootEl.scrollLeft = scrollTracker.scrollLeft - x
-      //if (y >= 0 && rootEl.clientHeight + rootEl.scrollTop + 1 >= rootEl.scrollHeight) { return true }
-      //if (y <= 0 && rootEl.scrollTop <= 0) { return true }
+      // if (y >= 0 && rootEl.clientHeight + rootEl.scrollTop + 1 >= rootEl.scrollHeight) { return true }
+      // if (y <= 0 && rootEl.scrollTop <= 0) { return true }
     }
   }
 
@@ -63,7 +63,7 @@ var virtualBinder = function (rootEl, children, parent) {
     var h = ''
     for (var i = 0; i < row.length; i++) {
       h += '<div style="white-space:nowrap;background-color:green;padding:4px; border-top: 4px solid black; border-left: 8px solid black">' +
-            '<div style="overflow:visible;border:1px solid white; margin:2px">' +
+            '<div contenteditable=true style="overflow:visible;border:1px solid white; margin:2px">' +
             row[i] +
             '</div>' +
             '</div>'
@@ -75,10 +75,10 @@ var virtualBinder = function (rootEl, children, parent) {
   }
 
   rootEl.addEventListener('scroll', function (e) {
-    // console.time('update scroll')
+    console.time('update scroll')
     update()
-    // console.timeEnd('update scroll')
-    // e.stopPropagation()
+    console.timeEnd('update scroll')
+    e.stopPropagation()
   })
 
   var pause = false
@@ -130,45 +130,53 @@ var virtualBinder = function (rootEl, children, parent) {
     var ndh = 0
     var ndhc = 0
     var rel = rootEl.nextElementSibling
+    var grc = 0
     // /be.style.minWidth = 'initial'//('min-width')
-    for (var i = 0; i < data.length; i++) {
-      var rd = rowdata[i]
-      var row = data[i]
-      var er = rd || bounds(row)
-      var show = false
-      if (y + er.height <= 0 + props.paddingTop) { marginTop += er.height } else if (y >= b - t + props.paddingTop) { marginBottom += er.height } else { h += er.height; show = true }
+    if (true) {
+      for (var i = 0; i < data.length; i++) {
+        var rd = rowdata[i]
+        var row = data[i]
+        var er = rd || bounds(row)
+        var show = false
+        if (y + er.height <= 0 + props.paddingTop) { marginTop += er.height } else if (y >= b - t + props.paddingTop) { marginBottom += er.height } else { h += er.height; show = true }
 
-      // el.style.display = show ? 'block' : 'none'
-      var el = circularArray(cached, i)
-      if (show) {
-        if (!el) {
-          el = genrow(row)
-          rel.append(el)
-          var pel = circularArray(cached, i, el)
-          if (pel && pel.parentNode) rel.removeChild(pel)
-        } else if (el.parenteNode !== rel) {
-          rel.appendChild(el)
+        // el.style.display = show ? 'block' : 'none'
+        var el = circularArray(cached, i)
+        if (show && true) {
+          if (!el) {
+            el = genrow(row)
+            rel.append(el)
+            var pel = circularArray(cached, i, el)
+            if (pel && pel.parentNode) rel.removeChild(pel)
+          } else if (el.parenteNode !== rel) {
+            rel.appendChild(el)
+          }
+          if (retry) adjustWidths(el, retry)
+          // el.style.position = 'absolute'
+          var cels = el.children
+          for (var j = 0; j < cels.length; j++) {
+          // cels[j].style.minHeight = 'initial'// cels[j].style.removeProperty('min-width')
+            cels[j].style.minWidth = 'initial'// cels[j].style.removeProperty('min-width')
+            if (i === 0) cels[j].style.borderTop = 'none'
+            if (j === 0) cels[j].style.borderLeft = 'none'
+          }
+          er = rowdata[i] = grect(el)// el.getBoundingClientRect()
+          el.style.top = y /* + scrollTop */ + 'px'
+          el.style.left = -scrollLeft + 'px'
+          grc++
+        } else if (el) {
+          if (el.parentNode) rel.removeChild(el)
         }
-        if (retry) adjustWidths(el, retry)
-        // el.style.position = 'absolute'
-        var cels = el.children
-        for (var j = 0; j < cels.length; j++) {
-          cels[j].style.minWidth = 'initial'// cels[j].style.removeProperty('min-width')
-          if (i === 0) cels[j].style.borderTop = 'none'
-          if (j === 0) cels[j].style.borderLeft = 'none'
+        var eh = (er.height + 0.0) | 0
+        y += eh
+        if (show) {
+          ndh += eh
+          ndhc++
         }
-        er = rowdata[i] = grect(el)// el.getBoundingClientRect()
-        el.style.top = y /* + scrollTop */ + 'px'
-        el.style.left = -scrollLeft + 'px'
-      } else if (el) {
-        if (el.parentNode) rel.removeChild(el)
       }
-      var eh = (er.height + 0.0) | 0
-      y += eh
-      if (show) {
-        ndh += eh
-        ndhc++
-      }
+    } else {
+      ndh = y = data.length * defheight
+      ndc = data.length
     }
     ndh = ndhc ? (ndh / ndhc) : defheight
     var widths = []
@@ -190,13 +198,17 @@ var virtualBinder = function (rootEl, children, parent) {
       // console.log('----------- retry width ---------')
       // return update(widths)
     }
+    console.log('grc', grc)
   }
 
-  function adjustWidths (el, widths) {
+  function adjustWidths (el, widths, cr) {
     var cels = el.children
     if (!cels || !cels.length) return
+    var x = 0
     for (var i = 0; i < cels.length; i++) {
-      cels[i].style.minWidth = widths[i] + 'px'
+      cels[i].style.left = x + 'px'
+      cels[i].style.minWidth = (widths[i]- cr[i]) + 'px'
+      x += widths[i]
     }
   }
   function normalizeWidths (rel, widths) {
@@ -210,11 +222,14 @@ var virtualBinder = function (rootEl, children, parent) {
       }
     }
     var x = 0
+    var cr = []
     for (var i = 0; i < mw.length; i++) {
-      x += mw[i] + 1
-      mw[i] = ((mw[i] - cellrectwidth(cels[i]) - 0.99) | 0)
+      cr[i] = cellrectwidth(cels[i])
+      //mw[i] = ((mw[i] + cr[i]) | 0)
+      x += mw[i] + 2
     }
-    for (var j = 0; j < els.length; j++) adjustWidths(els[j], mw)
+    //x += 8
+    for (var j = 0; j < els.length; j++) adjustWidths(els[j], mw, cr)
     return x
   }
   function cellrectwidth (el) {
@@ -230,6 +245,26 @@ var virtualBinder = function (rootEl, children, parent) {
   }
 
   function grect (el) {
+    var els = el.children
+    var r
+    for (var i = 0; i < els.length; i++) {
+      var ecb = els[i].getBoundingClientRect()
+      if (r) {
+        r.right = Math.max(r.right, ecb.right)
+        r.left = Math.min(r.left, ecb.left)
+        r.bottom = Math.max(r.bottom, ecb.bottom)
+        r.top = Math.min(r.top, ecb.top)
+      } else {
+        r = {}
+        r.right = ecb.right
+        r.left = ecb.left
+        r.bottom = ecb.bottom
+        r.top = ecb.top
+      }
+    }
+    r.width = r.right - r.left
+    r.height = r.bottom - r.top
+    return r
     var cb = el.getBoundingClientRect()
     return {
       left: cb.left, top: cb.top, bottom: cb.botton, right: cb.right, width: cb.width, height: cb.height
@@ -315,8 +350,10 @@ function trackIt (opts) {
     console.log(velocity)
     if (!tracking) opts.update(e, 'down')
     if (1) {
-      if (1 && Math.abs(velocity) > 10) multiplier = Math.abs(velocity) / 20
-      else multiplier = 1
+      if (1 && Math.abs(velocity) > 10) {
+        multiplier = Math.abs(velocity) * 100
+        console.log('multiplier', multiplier)
+      } else multiplier = 1
 
       tracking = tit.cleanEvent(e)
       reference = tracking.y
@@ -492,7 +529,7 @@ function velocityIt (container, update) {
     // could use css transforms
     // handle.style.left = position.x + 'px'
     // handle.style.top = position.y + 'px'
-    console.log(position.y - start.y)
+    console.log(velocity.y)
     if (update(null, 'move', position.x - start.x, position.y - start.y)) {
       dragging = false
       velocity.x = velocity.y = 0
@@ -503,16 +540,18 @@ function velocityIt (container, update) {
   container.addEventListener('touchstart', function (event) {
     var e = trackIt.cleanEvent(event)
     console.log('touchdown')
-    var yv = Math.abs(velocity.y) 
-    ymultiplier = velocity.y>10 ? velocity.y/100 : 1
+    var yv = Math.abs(velocity.y)
+    ymultiplier = 1// yv > 10 ? yv / 2 : 1
+    console.log(ymultiplier)
 
     start.x = mouse.x = position.x = previous.x = e.x
     start.y = mouse.y = position.y = previous.y = e.y
-    dragging = true 
+    dragging = true
     update(e, 'down', 0, 0)
   })
   document.addEventListener('touchend', function (e) { dragging = false; update(e, 'up') })
   document.addEventListener('touchmove', function (event) {
+    if (!dragging) return
     var e = trackIt.cleanEvent(event)
     mouse.x = e.x // - bounds.left
     mouse.y = e.y // - bounds.top

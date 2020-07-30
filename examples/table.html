@@ -44,15 +44,15 @@
     for (var j=0; j<r; j++) {
       var row = []
       for (var i=0; i<c; i++) {
-        //row.push ((j+1) + ('-test'.repeat(myRandomFunction()*8)) + ' : ' + (i+1))
-        row.push ((j+1) + ';' + (i+1))
+        row.push ((j+1) + ('-test'.repeat(myRandomFunction()*8)) + ' : ' + (i+1))
+        //row.push ((j+1) + ';' + (i+1))
       }
       data.push(row)
     }
     return data
   }
 
-  var data = gendummydata(10, 1000)
+  var data = gendummydata(10, 8000)
 
   console.time ('init')
   virtualBinder (tablediv, data)

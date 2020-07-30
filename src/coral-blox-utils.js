@@ -236,51 +236,22 @@ function toJSON (a) {
 }
 EditCommand.prototype.apply = function (o, inel) {
   if (!EditCommand.blocked) EditCommand.blocked = true
-  if (inel) EditCommand.blocked = false
   var el = inel || this.textarea
   console.log('Undo ------ APPLYING')
-  /*
-  var els = el.children
-  for (var ki in o) {
-    var k = ki | 0
-    if (ki != k) continue
-    if (!els[k]) {
-      el.appendChild (document.createElement('div'))
-    }
-    els[k].innerHTML = o[k] || ''
-  }
-  if ('blocksLength' in o) while (els.length > o.blocksLength) el.removeChild(els[els.length - 1])
-  el.coral.methods.readFromDOM() */
   var _b = el.coral.state.blocks
-  if (0) {
-    var bs = toJSON(_b)
-    var ss = coral.diffApply(o, bs)
-    _b = el.coral.state.blocks = JSON.parse(ss)
-    o.state(toJSON(_b))
-  } else {
-    jsonpatch.applyPatch(_b, jsonpatch.deepClone(o))
-    o.state(jsonpatch.deepClone(_b))
-  }
+  jsonpatch.applyPatch(_b, jsonpatch.deepClone(o))
+  o.state(jsonpatch.deepClone(_b))
   _b.splice(0, 0)
-  if (0) {
-    for (var ki in o) {
-      var k = ki | 0
-      if (ki != k) continue
-      _b[k] = _b[k] || {}
-      _b[k].data = o[k] || ''
-    }
-    if ('blocksLength' in o) { _b.length = o.blocksLength; _b.splice(0, 0) }
-  }
-  if (!o.selection) {
-    o.selection = coral.ui.select.get(el)
-  }
+  if (!o.selection) { o.selection = coral.ui.select.get(el) }
   el.coral.render_()
   if (o.selection) coral.ui.select.set(o.selection, el)
 }
 
-var ws = xs_socket.message()
-var wsRoom = ws.sub('default')
-var wsSig = Math.random()
+if (window.xs_socket) {
+  var ws = xs_socket.message()
+  var wsRoom = ws.sub('default')
+  var wsSig = Math.random()
+}
 
 function Undoer (rootEl) {
   var stack = new Undo.Stack()
@@ -297,6 +268,13 @@ function Undoer (rootEl) {
     var l = Math.min(ol, nl)
     var pre = ''
     for (var s = 0; s < l && n[s] === o[s]; s++) pre += n[s]
+    if (s === l) {
+      return {
+        pos: l,
+        del: o.substring(l),
+        ins: n.substring(l)
+      }
+    }
     var post = ''
     for (var e = 0; e < l && n[nl - 1 - e] === o[ol - 1 - e]; e++) post += n[nl - 1 - e] // reversed but correct
 
@@ -309,22 +287,28 @@ function Undoer (rootEl) {
     return r
   }
 
-  var skipSelect = false
-  function pushwholestate () {
-    if (0) {
-      if (typeof (priordoc) !== 'string') priordoc = toJSON(priordoc)
-      var newdoc = toJSON(rootEl.coral.state.blocks)
-      var patchRedo = coral.diff(priordoc, newdoc)
-      if (!patchRedo) return
-      var patchUndo = coral.diff(newdoc, priordoc)
-      patchUndo.selection = priordoc.lastSelect || priordoc.selection // || priordoc.lastSelect
-      patchRedo.selection = priordoc.selection = coral.ui.select.get(rootEl)
-      patchUndo.state = patchRedo.state = funcs.state.bind(this)
-      stack.execute(new EditCommand(rootEl, patchUndo, patchRedo))
-      priordoc = coral.diffApply(patchRedo, priordoc, newdoc)
-      if (1) return
+  function preppatch (p, obj) {
+    if (p.length !== 1 && p[0].op !== 'replace') return null
+    var path = p[0].path.split('/')
+    var repl = { '~0': '/', '~1': '~' }
+    path.shift()
+    for (var i = 0; i < path.length; i++) path[i] = path[i].replace(/~0|~1/g, function (m) { return repl[m] })
+    var dv = coral.dot(obj, path)
+    var delta = Undoer.diff(p[0].value, dv.value)
+    return {
+      path: path,
+      delta: delta
     }
+  }
 
+  function pubstate (patchRedo, patchUndo) {
+    var diff = null//preppatch(patchUndo, rootEl.coral.state.blocks)
+    if (diff) wsRoom.pub({ diff: diff, sig: wsSig })
+    else wsRoom.pub({ patch: patchRedo, sig: wsSig })
+  }
+
+  var skipSelect = false
+  function pushwholestate (nopub) {
     console.time()
     var patchRedo = jsonpatch.compare(priordoc, rootEl.coral.state.blocks)
     var patchUndo = jsonpatch.compare(rootEl.coral.state.blocks, priordoc)
@@ -347,11 +331,7 @@ function Undoer (rootEl) {
             oldRedo.selection = patchRedo.selection
             // oldUndo[0].value = patchUndo[0].value
             // oldUndo.selection = patchUndo.selection
-            wsRoom.pub({
-              patch: patchRedo,
-              sig: wsSig
-            })
-            console.log('consolidate undo....')
+            if (wsRoom && !nopub) pubstate(patchRedo, oldRedo)
             // priordoc.lastSelect = null
             skipSelect = true
             return
@@ -361,10 +341,9 @@ function Undoer (rootEl) {
 
       skipSelect = false
       stack.execute(new EditCommand(rootEl, patchUndo, patchRedo))
-      if (1) wsRoom.pub({
-        patch: patchRedo,
-        sig: wsSig
-      })
+      if (test++) {
+        if (wsRoom && !nopub) pubstate(patchRedo, patchUndo)
+      }
       jsonpatch.applyPatch(priordoc, jsonpatch.deepClone(patchRedo))
       priordoc.selection = patchRedo.selection
     }
@@ -372,17 +351,40 @@ function Undoer (rootEl) {
     console.log('undo ---- captured')
   }
   var th = this
-  wsRoom.on(function (msg) {
-    if (msg.subject !== 'message') return
-    console.log('--------', msg)
-    var patchdo = msg.message
-    if (!patchdo) return
-    if (!patchdo.sig) return
-    if (patchdo.sig === wsSig) return
-    patchdo.patch.state = function() {}//funcs.state.bind(th)
-    EditCommand.prototype.apply(patchdo.patch, rootEl)
-    pushwholestate()
-  })
+  var test = 0
+  if (wsRoom) {
+    wsRoom.on(function (msg) {
+      if (msg.subject !== 'message') return
+      var patchdo = msg.message
+      if (!patchdo) return
+      if (!patchdo.sig) return
+      if (patchdo.sig === wsSig) return
+      if (true) {
+        EditCommand.blocked = true
+        // jsonpatch.applyPatch(rootEl.coral.state.blocks, patchdo.patch)
+        if (patchdo.patch) jsonpatch.applyPatch(rootEl.coral.state.blocks, patchdo.patch)
+        else if (patchdo.diff) {
+          var d = patchdo.diff
+          var dv = coral.dot(rootEl.coral.state.blocks, d.path)
+          if (dv && dv.obj) {
+            var s = dv.value
+            if (d.delta.ins) s = s.substring(0, d.delta.pos) + d.delta.ins + s.substring(d.delta.pos)
+            else s = s.substring(0, d.delta.pos) + s.substring(d.delta.pos + d.delta.del.length)
+            dv.apply(s)
+          }
+        }
+
+        rootEl.coral.state.blocks.splice(0, 0)
+        var selection = coral.ui.select.get(rootEl)
+        rootEl.coral.render_()
+        if (selection) coral.ui.select.set(selection, rootEl)
+      } else {
+        patchdo.patch.state = function () {}// funcs.state.bind(th)
+        EditCommand.prototype.apply(patchdo.patch, rootEl)
+      }
+      pushwholestate(true)
+    })
+  }
   var react = function (mutations) {
     if (mutations.length === 2) {
       if (mutations[0].type === mutations[1].type && mutations[0].type === 'childList' &&
