@@ -34,7 +34,6 @@ var virtualBinder = function (rootEl, children, parent) {
       update: scrollTracker
     })
   }
-  /// trackIt({ el: rootEl.nextElementSibling, update: scrollTracker })
   velocityIt(rootEl.nextElementSibling, scrollTracker)
   if (0 && window.ScrollSensor) {
     const scrollSensor = new ScrollSensor({
@@ -207,7 +206,7 @@ var virtualBinder = function (rootEl, children, parent) {
     var x = 0
     for (var i = 0; i < cels.length; i++) {
       cels[i].style.left = x + 'px'
-      cels[i].style.minWidth = (widths[i]- cr[i]) + 'px'
+      cels[i].style.minWidth = (widths[i] - cr[i]) + 'px'
       x += widths[i]
     }
   }
@@ -225,10 +224,10 @@ var virtualBinder = function (rootEl, children, parent) {
     var cr = []
     for (var i = 0; i < mw.length; i++) {
       cr[i] = cellrectwidth(cels[i])
-      //mw[i] = ((mw[i] + cr[i]) | 0)
+      // mw[i] = ((mw[i] + cr[i]) | 0)
       x += mw[i] + 2
     }
-    //x += 8
+    // x += 8
     for (var j = 0; j < els.length; j++) adjustWidths(els[j], mw, cr)
     return x
   }
@@ -336,135 +335,6 @@ var toPX = (function () {
   return toPX
 })()
 
-function trackIt (opts) {
-  var touchEl = opts.el
-  var tit = trackIt
-  var tracking
-  var velocity, timestamp, frame, offset, reference, ticker, amplitude, target
-  var timeConstant = 325
-  var tickerCount = 0
-  var multiplier = 1
-
-  offset = 0
-  function down (e) {
-    console.log(velocity)
-    if (!tracking) opts.update(e, 'down')
-    if (1) {
-      if (1 && Math.abs(velocity) > 10) {
-        multiplier = Math.abs(velocity) * 100
-        console.log('multiplier', multiplier)
-      } else multiplier = 1
-
-      tracking = tit.cleanEvent(e)
-      reference = tracking.y
-      velocity = amplitude = 0
-      offset = 0
-      frame = offset
-      timestamp = Date.now()
-      clearInterval(ticker)
-      tickerCount = 0
-      ticker = setInterval(track, 100)
-
-      opts.update(e, 'down')
-    }
-    tit.stopEvent(e)
-  }
-
-  function scroll (x, y) {
-    offset = y
-    return opts.update(null, 'move', x, y)
-  }
-
-  function autoScroll () {
-    var elapsed, delta
-
-    if (amplitude) {
-      elapsed = Date.now() - timestamp
-      delta = -amplitude * Math.exp(-elapsed / timeConstant)
-      var cancel = false
-      if (delta > 0.5 || delta < -0.5) {
-        if (!scroll(0, target + delta)) { requestAnimationFrame(autoScroll) } else cancel = true
-      } else cancel = true
-
-      if (cancel) {
-        tracking = null
-        scroll(0, target)
-        velocity = 0
-        offset = 0
-        opts.update(null, 'up')
-      }
-    }
-  }
-
-  function track (el) {
-    var now, elapsed, delta, v
-    tickerCount++
-
-    now = Date.now()
-    elapsed = el || now - timestamp
-    timestamp = now
-    delta = offset - frame
-    frame = offset
-
-    v = 1000 * delta / (1 + elapsed)
-    velocity = 0.8 * v + 0.2 * velocity
-    // velocity = -500
-  }
-
-  function up (e) {
-    tit.stopEvent(e)
-    clearInterval(ticker)
-    if (!tickerCount) track(200)
-    velocity *= multiplier
-    if (velocity > 10 || velocity < -10) {
-      amplitude = 0.8 * velocity
-      target = Math.round(offset + amplitude)
-      timestamp = Date.now()
-      requestAnimationFrame(autoScroll)
-    } else {
-      tracking = null
-      velocity = 0
-      offset = 0
-      opts.update(e, 'up')
-    }
-  }
-
-  function move (e) {
-    // console.log('----- move ----', e)
-    if (tracking) {
-      var moved = tit.cleanEvent(e)
-      var delta = moved.y - reference
-      if (delta > 2 || delta < -2) {
-        reference = moved.y
-        // scroll(offset + delta)
-      }
-      scroll(moved.x - tracking.x, moved.y - tracking.y)
-      tit.stopEvent(e)
-    }
-  }
-
-  function cancel (e) {
-    console.log('----- cancel ----', e)
-  }
-
-  touchEl.addEventListener('touchstart', down)
-  touchEl.addEventListener('touchend', up)
-  touchEl.addEventListener('touchmove', move)
-  touchEl.addEventListener('touchcancel', cancel)
-}
-
-trackIt.cleanEvent = function (e) {
-  if (e.type === 'touchmove' || e.type === 'touchstart' || e.type === 'touchend') {
-    var t = e.targetTouches[0] || e.changedTouches[0]
-    return { x: t.clientX, y: t.clientY, id: t.identifier }
-  }
-  return { x: e.clientX, y: e.clientY, id: null }
-}
-trackIt.stopEvent = function (e) {
-  e.preventDefault()
-  e.stopPropagation()
-}
-
 function velocityIt (container, update) {
   var FRICTION_COEFF = 0.95
   var BOUNCE = 0.2
@@ -558,4 +428,114 @@ function velocityIt (container, update) {
   })
 
   step()
+}
+
+// =================================================================================================
+//
+// from https://stackoverflow.com/questions/11974262/how-to-clone-or-re-dispatch-dom-events
+//
+// =================================================================================================
+var allModifiers = ['Alt', 'AltGraph', 'CapsLock', 'Control',
+  'Meta', 'NumLock', 'Scroll', 'Shift', 'Win']
+function redispatchEvent (original, newtarget) {
+  if (typeof Event === 'function') {
+    var eventCopy = new original.constructor(original.type, original)
+  } else {
+    // Internet Explorer
+    var eventType = original.constructor.name
+    var eventCopy = document.createEvent(eventType)
+    if (original.getModifierState) {
+      var modifiersList = allModifiers.filter(
+        original.getModifierState,
+        original
+      ).join(' ')
+    }
+
+    if (eventType === 'MouseEvent') {
+      original.initMouseEvent(
+        original.type, original.bubbles, original.cancelable,
+        original.view, original.detail, original.screenX, original.screenY,
+        original.clientX, original.clientY, original.ctrlKey,
+        original.altKey, original.shiftKey, original.metaKey,
+        original.button, original.relatedTarget
+      )
+    }
+    if (eventType === 'DragEvent') {
+      original.initDragEvent(
+        original.type, original.bubbles, original.cancelable,
+        original.view, original.detail, original.screenX, original.screenY,
+        original.clientX, original.clientY, original.ctrlKey,
+        original.altKey, original.shiftKey, original.metaKey,
+        original.button, original.relatedTarget, original.dataTransfer
+      )
+    }
+    if (eventType === 'WheelEvent') {
+      original.initWheelEvent(
+        original.detail, original.screenX, original.screenY,
+        original.clientX, original.clientY, original.button,
+        original.relatedTarget, modifiersList,
+        original.deltaX, original.deltaY, original.deltaZ, original.deltaMode
+      )
+    }
+    if (eventType === 'PointerEvent') {
+      original.initPointerEvent(
+        original.type, original.bubbles, original.cancelable,
+        original.view, original.detail, original.screenX, original.screenY,
+        original.clientX, original.clientY, original.ctrlKey,
+        original.altKey, original.shiftKey, original.metaKey,
+        original.button, original.relatedTarget,
+        original.offsetX, original.offsetY, original.width, original.height,
+        original.pressure, original.rotation,
+        original.tiltX, original.tiltY,
+        original.pointerId, original.pointerType,
+        original.timeStamp, original.isPrimary
+      )
+    }
+    if (eventType === 'TouchEvent') {
+      original.initTouchEvent(
+        original.type, original.bubbles, original.cancelable,
+        original.view, original.detail, original.screenX, original.screenY,
+        original.clientX, original.clientY, original.ctrlKey,
+        original.altKey, original.shiftKey, original.metaKey,
+        original.touches, original.targetTouches, original.changedTouches,
+        original.scale, original.rotation
+      )
+    }
+    if (eventType === 'TextEvent') {
+      original.initTextEvent(
+        original.type, original.bubbles, original.cancelable,
+        original.view,
+        original.data, original.inputMethod, original.locale
+      )
+    }
+    if (eventType === 'CompositionEvent') {
+      original.initTextEvent(
+        original.type, original.bubbles, original.cancelable,
+        original.view,
+        original.data, original.inputMethod, original.locale
+      )
+    }
+    if (eventType === 'KeyboardEvent') {
+      original.initKeyboardEvent(
+        original.type, original.bubbles, original.cancelable,
+        original.view, original.char, original.key,
+        original.location, modifiersList, original.repeat
+      )
+    }
+    if (eventType === 'InputEvent' || eventType === 'UIEvent') {
+      original.initUIEvent(
+        original.type, original.bubbles, original.cancelable,
+        original.view, original.detail
+      )
+    }
+    if (eventType === 'FocusEvent') {
+      original.initFocusEvent(
+        original.type, original.bubbles, original.cancelable,
+        original.view, original.detail, original.relatedTarget
+      )
+    }
+  }
+
+  newtarget.dispatchEvent(eventCopy)
+  if (eventCopy.defaultPrevented) original.preventDefault()
 }

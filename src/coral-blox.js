@@ -311,10 +311,10 @@
   }
 
   var elemtags = {
-    'cui-ed-oembed': {
+    'cui-ed-youtube': {
       contains: { IFRAME: true, inline: true, INPUT: true, P: true, DIV: true },
       toHTML: function (b, edit) {
-        return '<div coral-editor coral-blox=cui-ed-oembed>' +
+        return '<div coral-editor coral-blox=cui-ed-youtube>' +
                '<iframe width="480" height="270" src="https://www.youtube.com/embed/M3r2XDceM6A?feature=oembed" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>' +
                '</div>'
       }
@@ -324,7 +324,7 @@
       attr: { src: true, width: true, height: true, caption: true },
       toHTML: function (b, edit) {
         return '<div coral-blox=cui-ed-image><img ' + this.attrString(b, ['src', 'width', 'height']) + '>' +
-               '<p coral-editor-src class="cui-editor-focus_" contenteditable=true>' + this.esc(b.src || '') + '</p>' +
+               '<p coral-editor-src class="cui-editor-focus" contenteditable=true>' + this.esc(b.src || '') + '</p>' +
                '<div coral-editor coral-editor-controls contenteditable=true>' + // <input class="cui-editor-focus">' +
                this.toHTML(b.caption, 2) + '</div></div>'
       },
@@ -359,8 +359,8 @@
     OL_: { LI: true },
     UL_: { LI: true },
     THEAD: { TR: true, TD: true, TH: true },
-    TABLE_: { THEAD: true, TR: true, TBODY: true },
-    TBODY_: { TR: true, TD: true, TH: true },
+    TABLE: { THEAD: true, TR: true, TBODY: true },
+    TBODY: { TR: true, TD: true, TH: true },
     TD: { LI: true, P: true, OL: true, UL: true },
     TH: { TD: true },
     TR: { TH: true, TD: true },
