@@ -959,7 +959,7 @@ coral.ui.register('cui-joystick', {
       if (!this.state.interval) {
         var th = this
         var tr = th.data.rects
-        var x = (th.data.pos.left + th.data.pos.width/2 + window.pageXOffset) + dx*4
+        var x = (th.data.pos.left + th.data.pos.width/2 + window.pageXOffset) + dx*10
         var y = (th.data.pos.top + th.data.pos.height/2 + window.pageYOffset)  + dy
         testSetSelection (tr, x, y, this.data.select && this.data.select.start)
       }
