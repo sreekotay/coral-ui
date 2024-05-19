@@ -739,7 +739,7 @@
     <script src='https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.2/dragula.js'></script>
 -->
   <div style='position:fixed; z-index:999' >
-    <div coral="cui-editor-buttons" class='cui-horizontal cui-align' 
+    <div coral="cui-editor-buttons" class='cui-fixed-bottom cui-horizontal cui-align' 
          style='box-shadow:0 -5px 10px white; position:fixed; height:40px; bottom:0; Left:0; right:0; background:rgba(255,255,255,0.9); border-top:1px solid rgba(0,0,0,0.1);'
          coral-s-datasrc='state.list'>
         <script type='coral-template(d,i)'>
@@ -749,7 +749,7 @@
           [ {"label":"↺", "action":"undo"}, {"label":"↻", "action":"redo"},{"label":"⬆️", "action":"sync"}, {"label": "menu", "action":"menu"} ]
         </script>
     </div>
-    <div coral='cui-joystick' class="cui-shadow-white thumb"
+    <div coral='cui-joystick' class="cui-fixed-bottom cui-shadow-white thumb"
       style='border-radius:100%; width:40px; height:40px; bottom: 4px; right: calc(50% - 20px); 
              border:8px solid rgba(0, 0, 0, 0.2); background:rgba(255,255,255,0.9); position:fixed;z-index:1' >
       <div style='border-radius:100%; width:100px; height:100px; bottom: 0; right: 0; opacity: 0.9; background: radial-gradient(rgba(255,255,255,0), rgba(255,255,255,0), #666); position:fixed;z-index:1' class='joystick'>
@@ -1031,6 +1031,14 @@ coral.ui.register ('cui-text', {
     domchange (this.rootEl)
     this.html (0, this.state.display.value)
   }
+})
+
+document.addEventListener('DOMContentLoaded', () => {
+      if (window.visualViewport) window.visualViewport.addEventListener ('resize', ()=>{
+        let delta = window.innerHeight - window.visualViewport.height
+        let bot = `${delta}px`
+        document.querySelectorAll('.cui-fixed-bottom').forEach(el=>el.style.bottom=bot)
+      })
 })
 
 </script>
