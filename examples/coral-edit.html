@@ -1034,11 +1034,11 @@ coral.ui.register ('cui-text', {
 })
 
 document.addEventListener('DOMContentLoaded', () => {
-      if (window.visualViewport) window.visualViewport.addEventListener ('resize', ()=>{
-        let delta = window.innerHeight - window.visualViewport.height
-        let bot = `${delta}px`
-        document.querySelectorAll('.cui-fixed-bottom').forEach(el=>el.style.bottom=bot)
-      })
+    if (0 && window.visualViewport) window.visualViewport.addEventListener ('resize', ()=>{
+      let delta = window.innerHeight - window.visualViewport.height
+      let bot = `${delta}px`
+      document.querySelectorAll('.cui-fixed-bottom').forEach(el=>el.style.bottom=bot)
+    })
 })
 
 </script>
